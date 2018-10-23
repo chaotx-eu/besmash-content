@@ -1,5 +1,5 @@
 namespace BesmashContent {
-    public class Cursor : MapObject {
+    public class Cursor : Movable {
         
     }
 }

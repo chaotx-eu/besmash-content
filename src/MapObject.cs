@@ -9,5 +9,13 @@ namespace BesmashContent {
         
         /// Position on a TileMap.
         public Point Position {get; set;}
+
+        public override void update(GameTime time) {
+            DestinationRectangle = new Rectangle(
+                ContainingMap.X + Position.X*ContainingMap.TileWidth,
+                ContainingMap.Y + Position.Y*ContainingMap.TileHeight,
+                ContainingMap.TileWidth,
+                ContainingMap.TileHeight);
+        }
     }
 }

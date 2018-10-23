@@ -5,16 +5,8 @@ namespace BesmashContent {
 
     public class Tile : MapObject {
         /// Solid Tiles cannot be passed by
-        /// IMovable objects.
+        /// Movable objects.
         [ContentSerializer(Optional = true)]
         public bool Solid {get; set;} = false;
-        
-        public override void update(GameTime time) {
-            DestinationRectangle = new Rectangle(
-                Position.X*ContainingMap.TileWidth,
-                Position.Y*ContainingMap.TileHeight,
-                ContainingMap.TileWidth,
-                ContainingMap.TileHeight);
-        }
     }
 }
