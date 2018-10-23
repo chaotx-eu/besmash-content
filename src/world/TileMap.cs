@@ -81,8 +81,8 @@
                 height = Tiles.Max(t => t.Position.Y) + 1;
             }
 
-            tileWidth = game.GraphicsDevice.DisplayMode.Width/(2*Viewport.X);
-            tileHeight = game.GraphicsDevice.DisplayMode.Height/(2*Viewport.Y);
+            tileWidth = game.GraphicsDevice.Viewport.Width/(2*Viewport.X + 1);
+            tileHeight = game.GraphicsDevice.Viewport.Height/(2*Viewport.Y + 1);
             Tiles.ForEach(t => t.ContainingMap = this);
             // Entities.ForEach(e => e.ContainingMap = this);
         }
