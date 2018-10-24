@@ -8,10 +8,10 @@ namespace BesmashContent {
         public virtual void move(Point target) {
             Position = target;
         }
-
+        
         public override void update(GameTime time) {
-            // Do nothing. Destination rect gets set
-            // becomes slave on a map.
+            if(ContainingMap.Slave != this)
+                base.update(time);
         }
     }
 }

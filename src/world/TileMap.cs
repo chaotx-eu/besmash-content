@@ -14,9 +14,21 @@
         /// Describes Viewport width and height
         /// in Tiles. The Viewport position is
         /// centered around the current Slave on
-        /// this map.
+        /// this map. Reinitializes tile size
+        /// and slave size/position when set.
         [ContentSerializer(Optional = true)]
-        public Point Viewport {get; set;} = new Point(8, 8);
+        public Point Viewport {
+            get {
+                return viewport;
+            }
+            set {
+                viewport = value;
+                initTileSize();
+                initSlave();
+            }
+        }
+
+        private Point viewport = new Point(4, 4);
 
         /// List of Tiles this map is made of.
         [ContentSerializer(CollectionItemName = "Tile")]
@@ -76,14 +88,10 @@
                 else {
                     if(!Entities.Contains(value))
                         addEntity(value);
-
-                    value.DestinationRectangle = new Rectangle(
-                        Viewport.X*tileWidth, Viewport.Y*TileHeight,
-                        tileWidth, tileHeight
-                    );
                 }
 
                 slave = value;
+                initSlave();
             }
         }
 
@@ -100,9 +108,29 @@
                 height = Tiles.Max(t => t.Position.Y) + 1;
             }
 
-            tileWidth = game.GraphicsDevice.Viewport.Width/(2*Viewport.X + 1);
-            tileHeight = game.GraphicsDevice.Viewport.Height/(2*Viewport.Y + 1);
+            initTileSize();
+            initSlave();
             Tiles.ForEach(t => t.ContainingMap = this);
+        }
+
+        /// Computes and sets the size in pixels of Tiles on
+        /// this map based on the map- and screen-viewport.
+        public void initTileSize() {
+            if(game != null) {
+                tileWidth = game.GraphicsDevice.Viewport.Width/(2*Viewport.X + 1);
+                tileHeight = game.GraphicsDevice.Viewport.Height/(2*Viewport.Y + 1);
+            }
+        }
+
+        /// Initializes slave position and size based on
+        /// viewport and tile size (centered on screen).
+        public void initSlave() {
+            if(Slave != null) {
+                Slave.DestinationRectangle = new Rectangle(
+                    Viewport.X*tileWidth, Viewport.Y*TileHeight,
+                    tileWidth, tileHeight
+                );
+            }
         }
 
         /// Computes and sets screen X and Y coordinate
