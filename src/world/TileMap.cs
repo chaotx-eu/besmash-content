@@ -104,8 +104,8 @@
         public void init(Game game) {
             this.game = game;
             if(Tiles.Count > 0) {
-                width = Tiles.Max(t => t.Position.X) + 1;
-                height = Tiles.Max(t => t.Position.Y) + 1;
+                width = Tiles.Max(t => (int)t.Position.X) + 1;
+                height = Tiles.Max(t => (int)t.Position.Y) + 1;
             }
 
             initTileSize();
@@ -137,8 +137,8 @@
         /// dependent on the Viewport and the Slave position.
         public void align() {
             if(Slave != null) {
-                x = (Viewport.X - Slave.Position.X)*tileWidth;
-                y = (Viewport.Y - Slave.Position.Y)*tileHeight;
+                x = Viewport.X*tileWidth - (int)(Slave.Position.X*tileWidth);
+                y = Viewport.Y*tileHeight - (int)(Slave.Position.Y*tileHeight);
             }
         }
 
