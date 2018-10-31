@@ -40,14 +40,14 @@
 
         /// Width of this map in tiles. Equal
         /// to the x-coord of any Tile furthest
-        /// to the right.
+        /// to the right plus 1.
         [ContentSerializerIgnore]
         public int Width {get {return width;}}
         private int width = 0;
 
         /// Height of this map in tiles. Equal
         /// to the y-coord of any Tile furthest
-        /// to the bottom.
+        /// to the bottom plus 1.
         [ContentSerializerIgnore]
         public int Height {get {return height;}}
         private int height = 0;
@@ -78,7 +78,7 @@
 
         /// Movable object on this map. Gets affected
         /// by user input (e.g. Controller/Keyboard).
-        /// The Viewport is centered around this object.
+        /// Will always be centered on the screen.
         [ContentSerializerIgnore]
         public Movable Slave {
             get { return slave;}
@@ -100,6 +100,8 @@
         /// Reference to running game.
         private Game game;
 
+        private Tile[][] tileArray;
+
         /// Initializes this map and all its objects.
         public void init(Game game) {
             this.game = game;
@@ -107,6 +109,15 @@
                 width = Tiles.Max(t => (int)t.Position.X) + 1;
                 height = Tiles.Max(t => (int)t.Position.Y) + 1;
             }
+
+            // Tiles are saved in an array for faster access
+            tileArray = new Tile[width][];
+
+            for(int x = 0; x < width; ++x)
+                tileArray[x] = new Tile[height];
+
+            Tiles.ForEach(t => tileArray
+                [(int)t.Position.X][(int)t.Position.Y] = t);
 
             initTileSize();
             initSlave();
@@ -133,7 +144,7 @@
             }
         }
 
-        /// Computes and sets screen X and Y coordinate
+        /// Computes and sets X and Y onscreen-coordinate
         /// dependent on the Viewport and the Slave position.
         public void align() {
             if(Slave != null) {
@@ -179,6 +190,19 @@
                 Entities.Remove(e);
                 if(e == slave) Slave = null;
             }
+        }
+
+        public Tile getTile(int x, int y) {
+            if(x >= 0 && x < Width && y >= 0 && y < Height)
+                return tileArray[x][y];
+
+            return null;
+        }
+
+        public List<Entity> getEntities(int x, int y) {
+            return Entities.Where(e =>
+                e.Position.X == x &&
+                e.Position.Y == y).ToList();
         }
     }
 }

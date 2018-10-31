@@ -34,7 +34,7 @@ namespace BesmashContent {
             Vector2 origin = new Vector2(
                 SpriteRectangle.Width/2f,
                 SpriteRectangle.Height/2f);
-
+                
             batch.Draw(sheet, rotateRectangle(DestinationRectangle, (int)Rotation),
                 SpriteRectangle, Color.White, Rotation*(float)Math.PI/180f,
                 origin, SpriteEffects.None, 1f);
