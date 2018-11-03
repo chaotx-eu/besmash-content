@@ -1,6 +1,9 @@
 namespace BesmashContent {
+    using BesmashContent.Utility;
     using Microsoft.Xna.Framework;
     using Microsoft.Xna.Framework.Content;
+    using System.Collections.Generic;
+    using System;
 
     /// Game objects which can be present on a map.
     public class MapObject : GameObject {
@@ -28,6 +31,24 @@ namespace BesmashContent {
                 ContainingMap.Y + (int)(Position.Y*ContainingMap.TileHeight),
                 ContainingMap.TileWidth,
                 ContainingMap.TileHeight);
+        }
+
+        /// Checks wether there is line of sight from the current
+        /// position to the desired spot on the containing map.
+        public bool canSee(int x, int y) {
+            if(ContainingMap == null) return false;
+            int tx = (int)Position.X;
+            int ty = (int)Position.Y;
+            List<Point> ray = MapUtils.getRay(tx, ty, x, y);
+
+            foreach(Point p in ray) {
+                Tile tile = ContainingMap.getTile(p.X, p.Y);
+                if(tile == null || tile.Solid) return false;
+                // if(ContainingMap.getEntities(p.X, p.Y).Count > 0)
+                //     return false;
+            }
+
+            return true;
         }
     }
 }

@@ -2,6 +2,32 @@ namespace BesmashContent {
     using Microsoft.Xna.Framework;
     using System;
 
+    /// Custom EventArgs for MoveEvents.
+    public class MoveEventArgs : EventArgs {
+        public Point Position {get;}
+        public Point Target {get;}
+
+        public MoveEventArgs(Point position, Point target) {
+            Position = position;
+            Target = target;
+        }
+    }
+
+    /// Defines the signature of a MoveStartedEvent handler.
+    public delegate void MoveStartedHandler(Movable sender, MoveEventArgs args);
+
+    /// Defines the signature of a MoveFinishedEvent handler.
+    public delegate void MoveFinishedHandler(Movable sender, MoveEventArgs args);
+
+    /// Defines how to react on collision with another MapObject.
+    /// Where distanceX and distanceY are the originally planned
+    /// movement values and other is the MapObject this object
+    /// would collide with. As return value a Point is expected
+    /// representing the new movement values to be taken instead
+    /// or null if nothing should happen.
+    /// Note: Unfinished, may change in the future!
+    public delegate Point? CollisionResolver(int distanceX, int distanceY, MapObject other);
+
     /// An object with the ability to move
     /// over a TileMap.
     public abstract class Movable : Entity {
@@ -9,32 +35,42 @@ namespace BesmashContent {
         /// move the distance of one Tile.
         public long StepTime {get; set;} = 0;
 
+        /// Holds wether this Movable is currently moving.
+        public bool Moving {get { return moving;}}
+
+        /// Event handler for handling move events i.e.
+        /// will be triggered after this Movable started moving.
+        public event MoveStartedHandler MoveStartedEvent;
+
+        /// Event handler for handling move events i.e.
+        /// will be triggered after this Movable finished moving.
+        public event MoveFinishedHandler MoveFinishedEvent;
+
         private bool moving;
         private int tgtX, tgtY;
         private float posX, posY;
 
-        /// Defines how to react on collision with another MapObject.
-        /// Where distanceX and distanceY are the originally planned
-        /// movement values and other is the MapObject this object
-        /// would collide with. As return value a Point is expected
-        /// representing the new movement values to be taken instead
-        /// or null if nothing should happen.
-        /// Note: Unfinished, may change in the future!
-        public delegate Point? CollisionResolver(int distanceX, int distanceY, MapObject other);
+        /// Stops any movement immediately.
+        public virtual void stop() {
+            moving = false;
+            onMoveFinished(new MoveEventArgs(
+                new Point((int)posX, (int)posY),
+                new Point(tgtX, tgtY)));
+        }
 
         public virtual void move(int distanceX, int distanceY) {
-            // Default CollisionResolver => Solid Tiles are unpassable.
+            // Default CollisionResolver => Solid Tiles and Entities are unpassable.
             // Has to be reimplemented if a different CollisionResolver is used.
             move(distanceX, distanceY, ((x, y, mo) => {
-                if(mo != null && mo.GetType() == typeof(Tile))
-                    if(((Tile)mo).Solid) return new Point(0, 0);
+                if(mo is Entity || mo is Tile && ((Tile)mo).Solid)
+                    return Point.Zero;
                     
                 return null;
             }));
         }
 
         public virtual void move(int distanceX, int distanceY, CollisionResolver resolve) {
-            if(!moving) {
+            if(!moving && (distanceX != 0 || distanceY != 0)) {
                 posX = Position.X;
                 posY = Position.Y;
                 tgtX = (int)posX + distanceX;
@@ -51,12 +87,17 @@ namespace BesmashContent {
                     move(newDistance.Value.X, newDistance.Value.Y, resolve);
                     return;
                 }
-                // if(newDistance != null) {
-                //     tgtX = (int)posX + newDistance.Value.X;
-                //     tgtY = (int)posY + newDistance.Value.Y;
-                // }
 
+                Facing = distanceY > 0 ? Facing.SOUTH
+                    : distanceY < 0 ? Facing.NORTH
+                    : distanceX > 0 ? Facing.EAST
+                    : distanceX < 0 ? Facing.WEST
+                    : Facing;
+                    
                 moving = true;
+                onMoveStarted(new MoveEventArgs(
+                    new Point((int)posX, (int)posY),
+                    new Point(tgtX, tgtY)));
             }
         }
         
@@ -94,7 +135,20 @@ namespace BesmashContent {
                 }
 
                 Position = new Vector2(posX, posY);
+                if(!moving) onMoveFinished(new MoveEventArgs(
+                    new Point(tgtX, tgtY),
+                    new Point(tgtX, tgtY)));
             }
+        }
+
+        protected virtual void onMoveStarted(MoveEventArgs args) {
+            MoveStartedHandler handler = MoveStartedEvent;
+            if(handler != null) handler(this, args);
+        }
+
+        protected virtual void onMoveFinished(MoveEventArgs args) {
+            MoveFinishedHandler handler = MoveFinishedEvent;
+            if(handler != null) handler(this, args);
         }
     }
 }

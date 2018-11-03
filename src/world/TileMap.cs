@@ -11,7 +11,7 @@
         [ContentSerializer(Optional = true)]
         public string Title {get; set;} = "";
 
-        /// Describes Viewport width and height
+        /// Describes Viewports width and height
         /// in Tiles. The Viewport position is
         /// centered around the current Slave on
         /// this map. Reinitializes tile size
