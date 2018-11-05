@@ -1,23 +1,29 @@
 namespace BesmashContent {
     using System;
+    using System.Runtime.Serialization;
     using Microsoft.Xna.Framework;
     using Microsoft.Xna.Framework.Graphics;
     using Microsoft.Xna.Framework.Content;
 
     /// All objects existing in the game universe
     /// inherit from this class.
+    [DataContract(IsReference = true)]
     public class GameObject {
         /// Source SpriteSheet url.
+        [DataMember]
         public string SpriteSheet {get; set;}
 
         /// Sprite Rectangle in SpriteSheet.
+        [DataMember]
         public Rectangle SpriteRectangle {get; set;}
 
         /// Rotation of the Sprite.
+        [DataMember]
         [ContentSerializer(Optional = true)]
         public float Rotation {get; set;} = 0;
 
         /// Rectangle to draw to on the screen.
+        [DataMember]
         [ContentSerializerIgnore]
         public Rectangle DestinationRectangle {get; set;}
 

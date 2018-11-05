@@ -2,8 +2,10 @@ namespace BesmashContent.Collections {
     using System.Collections.Generic;
 
     public class FixedList<T> : List<T> {
-        public int Limit {get;}
+        public static int MAX_SIZE {get;} = 0xFFFF;
+        public int Limit {get; set;}
 
+        public FixedList() : this(MAX_SIZE) {}
         public FixedList(int limit) : base(limit) {
             Limit = limit;
         }

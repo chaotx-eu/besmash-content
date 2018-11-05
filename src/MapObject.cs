@@ -4,9 +4,12 @@ namespace BesmashContent {
     using Microsoft.Xna.Framework.Content;
     using System.Collections.Generic;
     using System;
+    using System.Runtime.Serialization;
 
     /// Game objects which can be present on a map.
+    [DataContract(IsReference = true)]
     public class MapObject : GameObject {
+        [DataMember]
         [ContentSerializerIgnore]
         public TileMap ContainingMap {get; set;}
 
@@ -22,6 +25,7 @@ namespace BesmashContent {
         }
         
         /// Position on a TileMap.
+        [DataMember]
         [ContentSerializerIgnore]
         public Vector2 Position {get; set;}
 

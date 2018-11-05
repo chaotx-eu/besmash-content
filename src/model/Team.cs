@@ -5,41 +5,51 @@ namespace BesmashContent {
     using System.Collections.ObjectModel;
     using System.Linq;
     using System;
+    using System.Runtime.Serialization;
 
     /// Describes the way players in a team try to
     /// position them selfs while moving over a TileMap.
+    [DataContract(IsReference = true)]
     public class FormationStrategy {
         /// The formation grids width and height.
-        public Point FormationGrid {get; set;} = new Point(7, 5);
+        [DataMember]
+        public Point Size {get; set;} = new Point(7, 5);
 
         /// The facing of players in this formation;
+        [DataMember]
         public Facing Facing {get; set;}
 
         /// Position of the team leader in the
         /// formation grid.
+        [DataMember]
         public Point LeaderPosition {
             get {
                 return leaderPosition;
             }
 
             set {
-                if(value.X >= 0 && value.X < FormationGrid.X
-                && value.Y >= 0 && value.Y < FormationGrid.Y)
+                if(value.X >= 0 && value.X < Size.X
+                && value.Y >= 0 && value.Y < Size.Y)
                     leaderPosition = value;
             }
         }
 
-        private Point leaderPosition;
-
         /// Relative positions of team members to the
         /// team the leader.
-        public Dictionary<Player, Point> RelativePositions {get;}
+        [DataMember]
+        public Dictionary<Player, Point> RelativePositions {get {
+            return relativePositions == null
+                ? (relativePositions = new Dictionary<Player, Point>())
+                : relativePositions;
+        }}
+
+        private Point leaderPosition;
+        private Dictionary<Player, Point> relativePositions;
 
         public FormationStrategy(Team team) {
-            RelativePositions = new Dictionary<Player, Point>();
             LeaderPosition = new Point(
-                FormationGrid.X/2,
-                FormationGrid.Y/2);
+                Size.X/2,
+                Size.Y/2);
 
             team.Members.Where(m => m != team.Leader).ToList()
                 .ForEach(m => RelativePositions[m] = Point.Zero);
@@ -50,8 +60,13 @@ namespace BesmashContent {
     /// is controllable by user input. Other players in
     /// this team will try to move according to the set
     /// FormationStrategy.
+    [DataContract(IsReference = true)]
     public class Team {
+        /// Default value for maximum players a team can hold.
+        public static int DEFAULT_SIZE = 3;
+
         /// Leader of the team who must not be a member.
+        [DataMember]
         public Player Leader {
             get {
                 return leader;
@@ -61,10 +76,9 @@ namespace BesmashContent {
                 if(!Members.Contains(value)) {
                     if(value != null && value != leader) {
                         value.MoveStartedEvent += leaderMoveStarted;
-                        // value.MoveFinishedEvent += leaderMoveFinished;
+                        
                         if(leader != null)
                             leader.MoveStartedEvent -= leaderMoveStarted;
-                            // leader.MoveFinishedEvent -= leaderMoveFinished;
                     }
 
                     leader = value;
@@ -72,81 +86,79 @@ namespace BesmashContent {
             }
         }
 
-        private Player leader;
+        /// Members of this team excluding the leader.
+        [DataMember]
+        public List<Player> Members {get {
+            return members == null
+                ? (members = new List<Player>())
+                : members;
+        }}
 
-        /// Members of this team.
-        public ReadOnlyCollection<Player> Members {
-            get {
-                return members.AsReadOnly();
-            }
-        }
+        /// Max amount of players in this team can hold
+        /// including the leader.
+        [DataMember]
+        public int MaxSize {get; private set;}
 
-        private List<Player> members = new List<Player>();
+        /// Current amount of players this team holds
+        /// including the leader
+        [DataMember]
+        public int Size {get; private set;}
 
         /// FormationStategy of this team.
-        public FormationStrategy FormationStrategy {get;}
+        [DataMember]
+        public FormationStrategy FormationStrategy {get; private set;}
+
+        [DataMember]
+        private Point[] playerTargets;
+
+        [DataMember]
+        private FixedList<Point> leaderSteps;
+
+        private Player leader;
+        private List<Player> members;
 
         private MoveStartedHandler leaderMoveStarted;
         private MoveStartedHandler memberMoveStarted;
         private MoveFinishedHandler memberMoveFinished;
-        private FixedList<Point> leaderSteps;
-        private Point[] playerTargets;
 
-        public Team(Player leader, ICollection<Player> members) {
+        public Team() : this(DEFAULT_SIZE) {}
+        public Team(int maxSize) : this(null) {MaxSize = maxSize;}
+        public Team(Player leader) : this(leader, null) {}
+        public Team(Player leader, params Player[] members) {
+            if(members != null)
+                members.ToList().ForEach(addMember);
+
+            if(leader != null)
+                Leader = leader;
+
             FormationStrategy = new FormationStrategy(this);
-
-            memberMoveStarted = (mv, args) =>
-                playerTargets[Members.IndexOf((Player)mv)] = args.Target;
-
-            memberMoveFinished = (mv, args) => {
-                mv.StepTime = Leader.StepTime;
-                mv.MoveFinishedEvent -= memberMoveFinished;
-            };
-
-            leaderMoveStarted = (mv, args) => {
-                leaderSteps.Insert(0, args.Position);
-                playerTargets[Members.Count] = args.Target;
-
-                if(leaderSteps.Count >= Members.Count) {
-                    members.ToList().ForEach(m => {
-                        Point tgt = leaderSteps[Members.IndexOf(m)];
-                        if(!playerTargets.Where(p => p.Equals(tgt)).Any()) {
-                            int mx = tgt.X - (int)m.Position.X;
-                            int my = tgt.Y - (int)m.Position.Y;
-
-                            toFormation(m, args.Target, mv.Facing);
-                            if(!m.Moving) {
-                                m.stop();
-                                m.StepTime = Leader.StepTime/(Math.Abs(mx) + Math.Abs(my) > 1 ? 2 : 1);
-                                m.MoveFinishedEvent += memberMoveFinished;
-                                m.move(mx, my, (x, y, mo) => null);
-                            }
-                        }
-                    });
-                }
-            };
-
-            members.Remove(leader);
-            members.ToList().ForEach(addMember);
-            Leader = leader;
-            leaderSteps = new FixedList<Point>(members.Count);
-            playerTargets = new Point[members.Count+1];
+            Size = Members.Count + 1;
+            MaxSize = Size;
+            initEventHandler();
         }
 
+        /// Adds a member to the team.
         public void addMember(Player recruit) {
-            if(!members.Contains(recruit)) {
+            if(Size < MaxSize && !members.Contains(recruit)) {
                 members.Add(recruit);
                 FormationStrategy.RelativePositions[recruit] = Point.Zero;
                 recruit.MoveStartedEvent += memberMoveStarted;
+
+                leaderSteps = new FixedList<Point>(Size++);
+                playerTargets = new Point[Size];
             }
         }
 
+        /// Removes a member from the team.
         public void removeMember(Player member) {
             if(members.Contains(member)) {
                 members.Remove(member);
                 FormationStrategy.RelativePositions.Remove(member);
                 member.MoveStartedEvent -= memberMoveStarted;
                 member.MoveFinishedEvent -= memberMoveFinished;
+
+                playerTargets = new Point[Size--];
+                leaderSteps = new FixedList<Point>(Size);
             }
         }
 
@@ -164,6 +176,42 @@ namespace BesmashContent {
                 Members.ToList().ForEach(m =>
                     toFormation(m, Leader.Position.ToPoint(), Leader.Facing));
             }
+        }
+
+        private void initEventHandler() {
+            memberMoveStarted = (mv, args) =>
+                playerTargets[Members.IndexOf((Player)mv)] = args.Target;
+
+            memberMoveFinished = (mv, args) => {
+                mv.StepTime = Leader.StepTime;
+                mv.MoveFinishedEvent -= memberMoveFinished;
+            };
+
+            leaderMoveStarted = (mv, args) => {
+                leaderSteps.Insert(0, args.Position);
+                playerTargets[Members.Count] = args.Target;
+
+                Members.ToList().ForEach(m => {
+                    int memberIndex = Members.IndexOf(m);
+
+                    if(leaderSteps.Count > memberIndex) {
+                        Point tgt = leaderSteps[memberIndex];
+
+                        if(!playerTargets.Where(p => p.Equals(tgt)).Any()) {
+                            int mx = tgt.X - (int)m.Position.X;
+                            int my = tgt.Y - (int)m.Position.Y;
+
+                            toFormation(m, args.Target, mv.Facing);
+                            if(!m.Moving) {
+                                // m.stop();
+                                m.StepTime = Leader.StepTime/(Math.Abs(mx) + Math.Abs(my) > 1 ? 2 : 1);
+                                m.MoveFinishedEvent += memberMoveFinished;
+                                m.move(mx, my, (x, y, mo) => null);
+                            }
+                        }
+                    }
+                });
+            };
         }
 
         private void toFormation(Player member, Point target, Facing facing) {
@@ -208,6 +256,17 @@ namespace BesmashContent {
                 member.StepTime = Leader.StepTime/(Math.Abs(mx) + Math.Abs(my) > 1 ? 2 : 1);
                 member.move(mx, my, cr);
             }
+        }
+
+        [OnDeserialized]
+        private void OnDeserialized(StreamingContext context) {
+            initEventHandler();
+            Members.ForEach(m => m.MoveStartedEvent += memberMoveStarted);
+
+            // needs to be assigned explicitly since the handler
+            // was not accessable during deserialization
+            if(Leader != null) Leader.MoveStartedEvent += leaderMoveStarted;
+            leaderSteps.Limit = MaxSize;
         }
     }
 }

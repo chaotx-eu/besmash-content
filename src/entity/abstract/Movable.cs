@@ -1,4 +1,5 @@
 namespace BesmashContent {
+    using System.Runtime.Serialization;
     using Microsoft.Xna.Framework;
     using System;
 
@@ -33,10 +34,12 @@ namespace BesmashContent {
     public abstract class Movable : Entity {
         /// Time in millis this object needs to
         /// move the distance of one Tile.
+        [DataMember]
         public long StepTime {get; set;} = 0;
 
         /// Holds wether this Movable is currently moving.
-        public bool Moving {get { return moving;}}
+        [DataMember]
+        public bool Moving {get; set;}
 
         /// Event handler for handling move events i.e.
         /// will be triggered after this Movable started moving.
@@ -46,16 +49,16 @@ namespace BesmashContent {
         /// will be triggered after this Movable finished moving.
         public event MoveFinishedHandler MoveFinishedEvent;
 
-        private bool moving;
-        private int tgtX, tgtY;
-        private float posX, posY;
+        /// Target coordinate of the tile this objects
+        /// moves to. Is automatically set on move.
+        [DataMember]
+        public Point Target {get; set;}
 
         /// Stops any movement immediately.
         public virtual void stop() {
-            moving = false;
+            Moving = false;
             onMoveFinished(new MoveEventArgs(
-                new Point((int)posX, (int)posY),
-                new Point(tgtX, tgtY)));
+                Position.ToPoint(), Target));
         }
 
         public virtual void move(int distanceX, int distanceY) {
@@ -70,16 +73,17 @@ namespace BesmashContent {
         }
 
         public virtual void move(int distanceX, int distanceY, CollisionResolver resolve) {
-            if(!moving && (distanceX != 0 || distanceY != 0)) {
-                posX = Position.X;
-                posY = Position.Y;
-                tgtX = (int)posX + distanceX;
-                tgtY = (int)posY + distanceY;
+            if(!Moving && (distanceX != 0 || distanceY != 0)) {
+                int positionX = (int)Position.X;
+                int positionY = (int)Position.Y;
+                Target = new Point(
+                    positionX + distanceX,
+                    positionY + distanceY);
 
-                Tile tgtTile = ContainingMap.getTile(tgtX, tgtY);
+                Tile tgtTile = ContainingMap.getTile(Target.X, Target.Y);
                 Point? newDistance = resolve(distanceX, distanceY, tgtTile);
                 if(newDistance == null) {
-                    foreach(Entity e in ContainingMap.getEntities(tgtX, tgtY))
+                    foreach(Entity e in ContainingMap.getEntities(Target.X, Target.Y))
                         if((newDistance = resolve(distanceX, distanceY, e)) != null) break;
                 }
 
@@ -94,10 +98,9 @@ namespace BesmashContent {
                     : distanceX < 0 ? Facing.WEST
                     : Facing;
                     
-                moving = true;
+                Moving = true;
                 onMoveStarted(new MoveEventArgs(
-                    new Point((int)posX, (int)posY),
-                    new Point(tgtX, tgtY)));
+                    Position.ToPoint(), Target));
             }
         }
         
@@ -105,39 +108,40 @@ namespace BesmashContent {
             if(ContainingMap.Slave != this)
                 base.update(time);
 
-            if(moving) {
+            if(Moving) {
                 int et = time.ElapsedGameTime.Milliseconds;
+                float positionX = Position.X;
+                float positionY = Position.Y;
 
                 if(StepTime > 0) {
                     float fragment = et/(float)StepTime;
 
-                    if(posX != tgtX) {
-                        if(tgtX < posX)
-                            posX = Math.Max(posX-fragment, tgtX);
+                    if(positionX != Target.X) {
+                        if(Target.X < positionX)
+                            positionX = Math.Max(positionX-fragment, Target.X);
 
-                        if(tgtX > posX)
-                            posX = Math.Min(posX+fragment, tgtX);
+                        if(Target.X > positionX)
+                            positionX = Math.Min(positionX+fragment, Target.X);
                     }
 
-                    if(posY != tgtY) {
-                        if(tgtY < posY)
-                            posY = Math.Max(posY-fragment, tgtY);
+                    if(positionY != Target.Y) {
+                        if(Target.Y < positionY)
+                            positionY = Math.Max(positionY-fragment, Target.Y);
 
-                        if(tgtY > posY)
-                            posY = Math.Min(posY+fragment, tgtY);
+                        if(Target.Y > positionY)
+                            positionY = Math.Min(positionY+fragment, Target.Y);
                     }
 
-                    moving = posX != tgtX || posY != tgtY;
+                    Moving = positionX != Target.X || positionY != Target.Y;
                 } else {
-                    posX = tgtX;
-                    posY = tgtY;
-                    moving = false;
+                    positionX = Target.X;
+                    positionY = Target.Y;
+                    Moving = false;
                 }
 
-                Position = new Vector2(posX, posY);
-                if(!moving) onMoveFinished(new MoveEventArgs(
-                    new Point(tgtX, tgtY),
-                    new Point(tgtX, tgtY)));
+                Position = new Vector2(positionX, positionY);
+                if(!Moving) onMoveFinished(new MoveEventArgs(
+                    Position.ToPoint(), Target));
             }
         }
 

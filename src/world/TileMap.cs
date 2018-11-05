@@ -1,4 +1,5 @@
 ﻿namespace BesmashContent {
+    using System.Runtime.Serialization;
     using System.Collections.Generic;
     using System.Linq;
 
@@ -6,8 +7,11 @@
     using Microsoft.Xna.Framework.Graphics;
     using Microsoft.Xna.Framework.Content;
 
+    [KnownType(typeof(Player))]
+    [DataContract(IsReference = true)]
     public class TileMap {
         /// Title of this map.
+        [DataMember]
         [ContentSerializer(Optional = true)]
         public string Title {get; set;} = "";
 
@@ -16,6 +20,7 @@
         /// centered around the current Slave on
         /// this map. Reinitializes tile size
         /// and slave size/position when set.
+        [DataMember]
         [ContentSerializer(Optional = true)]
         public Point Viewport {
             get {
@@ -28,57 +33,24 @@
             }
         }
 
-        private Point viewport = new Point(4, 4);
-
         /// List of Tiles this map is made of.
+        [DataMember]
         [ContentSerializer(CollectionItemName = "Tile")]
         public List<Tile> Tiles {get; set;}
 
         /// List of Entities on this map.
+        [DataMember]
         [ContentSerializerIgnore]
-        public List<Entity> Entities {get;} = new List<Entity>();
-
-        /// Width of this map in tiles. Equal
-        /// to the x-coord of any Tile furthest
-        /// to the right plus 1.
-        [ContentSerializerIgnore]
-        public int Width {get {return width;}}
-        private int width = 0;
-
-        /// Height of this map in tiles. Equal
-        /// to the y-coord of any Tile furthest
-        /// to the bottom plus 1.
-        [ContentSerializerIgnore]
-        public int Height {get {return height;}}
-        private int height = 0;
-
-        /// Width in pixels of a single tile
-        /// on this map.
-        [ContentSerializerIgnore]
-        public int TileWidth {get {return tileWidth;}}
-        private int tileWidth;
-
-        /// Height in pixels of a single tile
-        /// on this map.
-        [ContentSerializerIgnore]
-        public int TileHeight {get {return tileHeight;}}
-        private int tileHeight;
-
-        /// X-coordinate of this map on
-        /// the screen.
-        [ContentSerializerIgnore]
-        public int X {get {return x;}}
-        private int x;
-
-        /// Y-coordinate of this map on
-        /// the screen.
-        [ContentSerializerIgnore]
-        public int Y {get {return y;}}
-        private int y;
+        public List<Entity> Entities {get {
+            return entities == null 
+                ? (entities = new List<Entity>())
+                : entities;
+        }}
 
         /// Movable object on this map. Gets affected
         /// by user input (e.g. Controller/Keyboard).
         /// Will always be centered on the screen.
+        [DataMember]
         [ContentSerializerIgnore]
         public Movable Slave {
             get { return slave;}
@@ -95,12 +67,48 @@
             }
         }
 
-        private Movable slave;
+        /// Width of this map in tiles. Equal
+        /// to the x-coord of any Tile furthest
+        /// to the right plus 1.
+        [ContentSerializerIgnore]
+        public int Width {get {return width;}}
 
-        /// Reference to running game.
+        /// Height of this map in tiles. Equal
+        /// to the y-coord of any Tile furthest
+        /// to the bottom plus 1.
+        [ContentSerializerIgnore]
+        public int Height {get {return height;}}
+
+        /// Width in pixels of a single tile
+        /// on this map.
+        [ContentSerializerIgnore]
+        public int TileWidth {get {return tileWidth;}}
+
+        /// Height in pixels of a single tile
+        /// on this map.
+        [ContentSerializerIgnore]
+        public int TileHeight {get {return tileHeight;}}
+
+        /// X-coordinate of this map on
+        /// the screen.
+        [ContentSerializerIgnore]
+        public int X {get {return x;}}
+
+        /// Y-coordinate of this map on
+        /// the screen.
+        [ContentSerializerIgnore]
+        public int Y {get {return y;}}
+
+        private Point viewport = new Point(4, 4);
+        private List<Entity> entities;
+        private Tile[][] tileArray;
+        private Movable slave;
         private Game game;
 
-        private Tile[][] tileArray;
+        private int tileWidth, tileHeight;
+        private int width, height;
+        private int x, y;
+
 
         /// Initializes this map and all its objects.
         public void init(Game game) {
@@ -162,9 +170,9 @@
 
         /// Aligns the map and updates all game object on it.
         public void update(GameTime time) {
+            align();
             foreach(Tile tile in Tiles) tile.update(time);
             foreach(Entity entity in Entities) entity.update(time);
-            align();
         }
 
         /// Draws all game objects on this map.
