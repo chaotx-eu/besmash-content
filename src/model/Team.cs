@@ -76,7 +76,7 @@ namespace BesmashContent {
                 if(!Members.Contains(value)) {
                     if(value != null && value != leader) {
                         value.MoveStartedEvent += leaderMoveStarted;
-                        
+
                         if(leader != null)
                             leader.MoveStartedEvent -= leaderMoveStarted;
                     }
@@ -160,6 +160,13 @@ namespace BesmashContent {
                 playerTargets = new Point[Size--];
                 leaderSteps = new FixedList<Point>(Size);
             }
+        }
+
+        /// Checks whether the passed player is part
+        /// of this team, member or leader.
+        public bool contains(Player player) {
+            return player == leader
+                || Members.Contains(player);
         }
 
         /// Updates the team members positions according to
