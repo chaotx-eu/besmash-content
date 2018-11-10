@@ -10,8 +10,30 @@ namespace BesmashContent.Utility {
             a ^= b;
         }
 
-        // Bresenham
-        // https://www.codeproject.com/Articles/15604/Ray-casting-in-a-2D-tile-based-environment
+        /// Rotates a point to the target facing relative
+        /// to the default facing north.
+        public static Point rotatePoint(Point point, Facing facing) {
+            Point rotated;
+            switch(facing) {
+                case(Facing.EAST):
+                    rotated = new Point(-point.Y, point.X);
+                    break;
+                case(Facing.SOUTH):
+                    rotated = new Point(-point.X, -point.Y);
+                    break;
+                case(Facing.WEST):
+                    rotated = new Point(point.Y, -point.X);
+                    break;
+                default:
+                    rotated = point;
+                    break;
+            }
+
+            return rotated;
+        }
+
+        /// Creates a line of points using the Bresenham-Algorithm
+        /// https://www.codeproject.com/Articles/15604/Ray-casting-in-a-2D-tile-based-environment
         public static List<Point> getRay(int x1, int y1, int x2, int y2) {
             List<Point> result = new List<Point>();
             bool steep = Math.Abs(y2 - y1) > Math.Abs(x2 - x1);
