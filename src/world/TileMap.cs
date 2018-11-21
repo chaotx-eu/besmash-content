@@ -5,6 +5,7 @@
 
     using Microsoft.Xna.Framework;
     using Microsoft.Xna.Framework.Graphics;
+    using Microsoft.Xna.Framework.Media;
     using Microsoft.Xna.Framework.Content;
 
     [KnownType(typeof(Player))]
@@ -14,6 +15,12 @@
         [DataMember]
         [ContentSerializer(Optional = true)]
         public string Title {get; set;} = "";
+
+        /// Path to the file used for the played
+        /// BackgroundMusic while the map is loaded
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public string BackgroundMusicFile {get; set;} // TODO
 
         /// Describes Viewports width and height
         /// in Tiles. The Viewport position is
@@ -98,6 +105,10 @@
         /// the screen.
         [ContentSerializerIgnore]
         public int Y {get {return y;}}
+        
+        /// Reference to the background song object
+        [ContentSerializerIgnore]
+        public Song BackgroundMusic {get; set;} // TODO
 
         private Point viewport = new Point(4, 4);
         private List<Entity> entities;
@@ -166,6 +177,14 @@
         public void load(ContentManager manager) {
             foreach(Tile tile in Tiles) tile.load(manager);
             foreach(Entity entity in Entities) entity.load(manager);
+
+            // testing: background music (TODO)
+            if(BackgroundMusicFile != null) try {
+                BackgroundMusic = manager.Load<Song>(BackgroundMusicFile);
+                MediaPlayer.Play(BackgroundMusic);
+            } catch(ContentLoadException) {
+                // ignore
+            }
         }
 
         /// Aligns the map and updates all game object on it.
