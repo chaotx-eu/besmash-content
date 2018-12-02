@@ -18,7 +18,7 @@ namespace BesmashContent
             for(int i = 0; i < fightingEntities.Count; i++)     //Arbeitet den Schaden durch gift ab
             {
                 BattleEntity battleEntity = fightingEntities[i];
-                if (battleEntity.entity.status.poisened)
+                if (battleEntity.entity.status.poisoned)
                     battleEntity.entity.isDealtDamage(12);
             }
 
