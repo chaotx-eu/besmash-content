@@ -1,22 +1,60 @@
 namespace BesmashContent
 {
+    using System;
     using System.Collections.Generic;
     public class BattleManager
     {
         private List<BattleEntity> fightingEntities;   //Eine Liste in der alle am Kampf teilnehmenden Entities genau einmal enthalten sind
-
+        private Random random;
         public BattleManager()
         {
             fightingEntities = new List<BattleEntity>();
         }
 
+        //Berechnet die Reihenfolge in der die Kämpfenden Entitys agieren dürfen und arbeitet sie der Reihe nach ab
+        public void ManageRound()
+        {
+            //Der Anfang der Runde
+            for(int i = 0; i < fightingEntities.Count; i++)     //Arbeitet den Schaden durch gift ab
+            {
+                BattleEntity battleEntity = fightingEntities[i];
+                if (battleEntity.entity.status.poisened)
+                    battleEntity.entity.isDealtDamage(12);
+            }
+
+            //Die einzelnen Aktionen der Kämpfer
+            List<BattleEntity> fightingOrder = calculateFightingOrder(); //Berechnet die Reihenfolge in der die Entities
+            for(int i = 0; i < fightingOrder.Count; i++)
+            {
+                if(!fightingOrder[i].entity.status.dead)
+                    ManageTurn(fightingOrder[i]);
+            }
+
+            //Das Ende der Runde
+        }
+
+        public void ManageTurn(BattleEntity battleEntity) //Ein einzelner Zug
+        {
+            if(battleEntity.entity.status.stunned)
+            {
+                //Entity skips turn. 
+            }
+            else if (battleEntity.entity.status.asleep)
+            {
+                if (random.Next(100) <= 20)
+                    battleEntity.entity.status.asleep = false; //15% chance aufzuwachen pro Runde
+                else
+                {
+                    //Skip Turn
+                }
+            }
+            else if (!battleEntity.entity.status.asleep)
+                battleEntity.entity.nextTurn();
+        }
+
         public void addToBattle(Entity entity)
         {
-            BattleEntity battleEntity = new BattleEntity();     //Erstellt eine BattleEntity, die auf die angegebene Entity verweist
-            battleEntity.entity = entity;
-            battleEntity.priority = 0;
-            battleEntity.times = 0;
-            battleEntity.temporalAgility = 0;
+            BattleEntity battleEntity = new BattleEntity(entity);     //Erstellt eine BattleEntity, die auf die angegebene Entity verweist
 
             fightingEntities.Add(battleEntity);
         }
@@ -45,7 +83,7 @@ namespace BesmashContent
             for(int i = 0; i < fightingEntities.Count; i++)
             {
                 BattleEntity battleEntity = fightingEntities[i];
-                battleEntity.temporalAgility += battleEntity.entity.Stats.AGI;
+                battleEntity.temporalAgility += battleEntity.stats.AGI + battleEntity.battleBuffs.AGI;
             }
 
             //Die Priorität wird auf 0 gesetzt
@@ -116,6 +154,23 @@ namespace BesmashContent
             } while (wasAdded);
 
             return fightingOrder;
+        }
+
+        public bool attack(BattleEntity attacker, BattleEntity defender, OffensiveAbility attack)
+        {
+            bool success = false;   //Rückgabe, ob der Angriff erfolgreich war oder nicht (eventuell nötig für irgendwas)
+            float damageMultiplier; //Multiplikator errechnet sich aus den Werten von Angreifer und Verteidiger
+            if(attack.isMagical)
+                damageMultiplier = ((float)attacker.stats.MGA + attacker.battleBuffs.MGA) / ((float)defender.stats.MGD + defender.battleBuffs.MGD);
+            else
+                damageMultiplier = ((float)attacker.stats.ATK + attacker.battleBuffs.ATK) / ((float)defender.stats.DEF + defender.battleBuffs.DEF);
+
+            success = defender.entity.isDealtDamage((int) (damageMultiplier * attack.BaseDamage));
+            
+            if(defender.entity.status.dead)
+                attacker.entity.onKill();
+
+            return success;
         }
     }
 }
