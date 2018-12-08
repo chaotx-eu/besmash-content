@@ -5,7 +5,7 @@ namespace BesmashContent
     public class BattleManager
     {
         private List<BattleEntity> fightingEntities;   //Eine Liste in der alle am Kampf teilnehmenden Entities genau einmal enthalten sind
-        private Random random;
+        public Random random;
         public BattleManager()
         {
             fightingEntities = new List<BattleEntity>();
@@ -37,18 +37,18 @@ namespace BesmashContent
         {
             if(battleEntity.entity.status.stunned)
             {
-                //Entity skips turn. 
+                battleEntity.entity.status.stunned = false;
             }
             else if (battleEntity.entity.status.asleep)
             {
-                if (random.Next(100) <= 20)
-                    battleEntity.entity.status.asleep = false; //15% chance aufzuwachen pro Runde
-                else
+                battleEntity.entity.status.roundsAsleep++;
+                if (random.Next(100) <= 10 * battleEntity.entity.status.roundsAsleep)
                 {
-                    //Skip Turn
+                    battleEntity.entity.status.asleep = false;
+                    battleEntity.entity.status.roundsAsleep = 0;
                 }
             }
-            else if (!battleEntity.entity.status.asleep)
+            else
                 battleEntity.entity.nextTurn();
         }
 
@@ -160,11 +160,14 @@ namespace BesmashContent
         {
             bool success = false;   //Rückgabe, ob der Angriff erfolgreich war oder nicht (eventuell nötig für irgendwas)
             float damageMultiplier; //Multiplikator errechnet sich aus den Werten von Angreifer und Verteidiger
-            if(attack.isMagical)
+            float dodgeRate = (attacker.stats.ACC + attacker.battleBuffs.ACC) / (defender.stats.DDG + defender.battleBuffs.DDG);
+            if(attack.IsMagical)
                 damageMultiplier = ((float)attacker.stats.MGA + attacker.battleBuffs.MGA) / ((float)defender.stats.MGD + defender.battleBuffs.MGD);
             else
                 damageMultiplier = ((float)attacker.stats.ATK + attacker.battleBuffs.ATK) / ((float)defender.stats.DEF + defender.battleBuffs.DEF);
 
+            if(random.Next(100) > dodgeRate * 100)
+                return false;
             success = defender.entity.isDealtDamage((int) (damageMultiplier * attack.BaseDamage));
             
             if(defender.entity.status.dead)

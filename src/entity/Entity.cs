@@ -29,32 +29,38 @@ namespace BesmashContent {
         {
             if (this.status.invincible)
                 return false;
+            
             this.onDamage();
-
             CurrentHP -= damage;
-            if (this.status.dead)
-                onDeath();
             return true;
         }
         
         //Bestimmte Events die überschrieben werde können um Effekte durch bestimmte taten auszulösen.
-        public virtual void onDamage()
+        public virtual void onDamage() //Entity hat schaden erhalten
         {
             /*
             Aufwachen, triggern von abilities etc.
             Will mir hier nur die Möglichkeit offen halten was einzubauen.
              */
+            if(this.status.asleep)
+            {
+                if (battleManager.random.Next(100) <= (10 * status.roundsAsleep) + 35)
+                {
+                    status.asleep = false;
+                    status.roundsAsleep = 0;
+                }
+            }
         }
-        public virtual void onHit()
+        public virtual void onHit() //Entity greift erfolgreich einen Gegner an
         {
             //Kann überschrieben werden.
         }
-        public virtual void onKill()
+        public virtual void onKill() //Entity tötet erfolgreich einen Gegner
         {
             //Kann überschrieben werden.
         }
 
-        public virtual void onDeath()
+        public virtual void onDeath() //Entity ist gestorben
         {
             battleManager.removeFromBattle(this);
         }
