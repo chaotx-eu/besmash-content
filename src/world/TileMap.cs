@@ -181,7 +181,7 @@
             // testing: background music (TODO)
             if(BackgroundMusicFile != null) try {
                 BackgroundMusic = manager.Load<Song>(BackgroundMusicFile);
-                MediaPlayer.Play(BackgroundMusic);
+                // MediaPlayer.Play(BackgroundMusic);
             } catch(ContentLoadException) {
                 // ignore
             }
