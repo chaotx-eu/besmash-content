@@ -48,11 +48,11 @@ namespace BesmashContent
                         defender.entity.status.addStatus(s.type);
                 }
 
-                if(followUpOnSuccess && !followUpOnFail)        //Bei einem Erfolg wird die Followup Ability gestartet (Sollte sie auch bei einem Misserfolg ausgeführt werden, wird sie hier übersprungen um Widerholungen zu vermeiden)
+                if(followUpOnSuccess)     //Bei einem Erfolg wird die Followup Ability gestartet
                     FollowUpAbility.useAbility();
             }
 
-            if(followUpOnFail)                                  //Bei einem Misserfolg wird die Followup Ability gestartet.
+            if(followUpOnFail && !success)                                  //Bei einem Misserfolg wird die Followup Ability gestartet.
                     FollowUpAbility.useAbility();
         }
     }
