@@ -18,16 +18,16 @@ namespace BesmashContent
 
         //Die Modifikatoren, der Basiswerte (im Normalfall immer x1)
         //Normal Stats
-        public float VITModifier{get;set;}
-        public float ATKModifier{get;set;}
-        public float MGAModifier{get;set;}
-        public float DEFModifier{get;set;}
-        public float MGDModifier{get;set;}
-        public float AGIModifier{get;set;}
+        public float VITModifier{get{if(VITModifier <= 0.25f) return 0.25f; else return VITModifier;} set{VITModifier = value;}}
+        public float ATKModifier{get{if(ATKModifier <= 0.25f) return 0.25f; else return ATKModifier;} set{ATKModifier = value;}}
+        public float MGAModifier{get{if(MGAModifier <= 0.25f) return 0.25f; else return MGAModifier;} set{MGAModifier = value;}}
+        public float DEFModifier{get{if(DEFModifier <= 0.25f) return 0.25f; else return DEFModifier;} set{DEFModifier = value;}}
+        public float MGDModifier{get{if(MGDModifier <= 0.25f) return 0.25f; else return MGDModifier;} set{MGDModifier = value;}}
+        public float AGIModifier{get{if(AGIModifier <= 0.25f) return 0.25f; else return AGIModifier;} set{AGIModifier = value;}}
         //Additional Stats
-        public float ACCModifier{get;set;}
-        public float DDGModifier{get;set;}
-        public float SPDModifier{get;set;}
+        public float ACCModifier{get{if(ACCModifier <= 0.25f) return 0.25f; else return ACCModifier;} set{ACCModifier = value;}}
+        public float DDGModifier{get{if(DDGModifier <= 0.25f) return 0.25f; else return DDGModifier;} set{DDGModifier = value;}}
+        public float SPDModifier{get{if(SPDModifier <= 0.25f) return 0.25f; else return SPDModifier;} set{SPDModifier = value;}}
 
 
         //Die Tatsächlichen Werte werden automatisch errechnet
@@ -51,8 +51,8 @@ namespace BesmashContent
             this.BaseMGD = 0;
             this.BaseAGI = 0;
 
-            this.BaseACC = 1.0f;
-            this.BaseDDG = 1.0f;
+            this.BaseACC = 0.0f;
+            this.BaseDDG = 0.0f;
             this.BaseSPD = 0;
 
             this.VITModifier = 0.0f;
@@ -119,7 +119,7 @@ namespace BesmashContent
             this.SPDModifier = 1.0f;
         }   
 
-        //Eine Reihe Stats wird erzeugt, mit eingestellten modifikatoren
+        //Eine Reihe einfacher Stats wird erzeugt, mit eingestellten modifikatoren
         public Stats(int vit, int atk, int mga, int def, int mgd, int agi, float vitm, float atkm, float mgam, float defm, float mgdm, float agim)
         {
             this.BaseVIT = vit;
@@ -129,12 +129,46 @@ namespace BesmashContent
             this.BaseMGD = mgd;
             this.BaseAGI = agi;
 
+            this.BaseACC = 1.0f;
+            this.BaseDDG = 1.0f;
+            this.BaseSPD = 4;
+
             this.VITModifier = vitm;
             this.ATKModifier = atkm;
             this.MGAModifier = mgam;
             this.DEFModifier = defm;
             this.MGDModifier = mgdm;
             this.AGIModifier = agim;
+
+            this.ACCModifier = 1.0f;
+            this.DDGModifier = 1.0f;
+            this.SPDModifier = 1.0f;
+        }
+
+        //Eine Reihe erweiterter Stats wird erzeugt, mit eingestellten modifikatoren
+        public Stats(int vit, int atk, int mga, int def, int mgd, int agi,  float acc, float ddg, int spd, float vitm, float atkm, float mgam, float defm, float mgdm, float agim, float accm, float ddgm, float spdm)
+        {
+            this.BaseVIT = vit;
+            this.BaseATK = atk;
+            this.BaseMGA = mga;
+            this.BaseDEF = def;
+            this.BaseMGD = mgd;
+            this.BaseAGI = agi;
+
+            this.BaseACC = acc;
+            this.BaseDDG = ddg;
+            this.BaseSPD = spd;
+
+            this.VITModifier = vitm;
+            this.ATKModifier = atkm;
+            this.MGAModifier = mgam;
+            this.DEFModifier = defm;
+            this.MGDModifier = mgdm;
+            this.AGIModifier = agim;
+
+            this.ACCModifier = accm;
+            this.DDGModifier = ddgm;
+            this.SPDModifier = spdm;
         }
         
         //Rechnet die Werte von zwei Statlisten zusammen (zum beispiel um Buffs zu addieren)

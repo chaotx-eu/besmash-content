@@ -4,7 +4,7 @@ namespace BesmashContent
     using System.Collections.Generic;
     public class BattleManager
     {
-        private List<BattleEntity> fightingEntities;   //Eine Liste in der alle am Kampf teilnehmenden Entities genau einmal enthalten sind
+        public List<BattleEntity> fightingEntities;   //Eine Liste in der alle am Kampf teilnehmenden Entities genau einmal enthalten sind
         public Random random;
         public BattleManager()
         {
@@ -15,11 +15,18 @@ namespace BesmashContent
         public void ManageRound()
         {
             //Der Anfang der Runde
-            for(int i = 0; i < fightingEntities.Count; i++)     //Arbeitet den Schaden durch gift ab
+            for(int i = 0; i < fightingEntities.Count; i++)  
             {
                 BattleEntity battleEntity = fightingEntities[i];
-                if (battleEntity.entity.status.poisoned)
+
+                if (battleEntity.entity.status.poisoned)    //Arbeitet den Schaden durch gift ab
                     battleEntity.entity.isDealtDamage(12);
+                
+                foreach(Buff b in battleEntity.battleBuffs) //prüft ob buffs/debuffs ablaufen
+                {
+                    if (!b.Over)
+                        b.updateRound();
+                }
             }
 
             //Die einzelnen Aktionen der Kämpfer
@@ -35,6 +42,12 @@ namespace BesmashContent
 
         public void ManageTurn(BattleEntity battleEntity) //Ein einzelner Zug
         {
+            foreach(Buff b in battleEntity.battleBuffs) //prüft ob buffs/debuffs ablaufen
+            {
+                if (!b.Over)
+                    b.updateTurn();
+            }
+            
             if(battleEntity.entity.status.stunned)
             {
                 battleEntity.entity.status.stunned = false;
@@ -83,7 +96,7 @@ namespace BesmashContent
             for(int i = 0; i < fightingEntities.Count; i++)
             {
                 BattleEntity battleEntity = fightingEntities[i];
-                battleEntity.temporalAgility += battleEntity.stats.AGI + battleEntity.battleBuffs.AGI;
+                battleEntity.temporalAgility += battleEntity.stats.AGI;
             }
 
             //Die Priorität wird auf 0 gesetzt
@@ -160,13 +173,13 @@ namespace BesmashContent
         {
             bool success = false;   //Rückgabe, ob der Angriff erfolgreich war oder nicht (eventuell nötig für irgendwas)
             float damageMultiplier; //Multiplikator errechnet sich aus den Werten von Angreifer und Verteidiger
-            float dodgeRate = (attacker.stats.ACC + attacker.battleBuffs.ACC) / (defender.stats.DDG + defender.battleBuffs.DDG);
+            float dodgeRate = (attacker.stats.ACC) / (defender.stats.DDG);
             if(attack.IsMagical)
-                damageMultiplier = ((float)attacker.stats.MGA + attacker.battleBuffs.MGA) / ((float)defender.stats.MGD + defender.battleBuffs.MGD);
+                damageMultiplier = ((float)attacker.stats.MGA) / ((float)defender.stats.MGD);
             else
-                damageMultiplier = ((float)attacker.stats.ATK + attacker.battleBuffs.ATK) / ((float)defender.stats.DEF + defender.battleBuffs.DEF);
+                damageMultiplier = ((float)attacker.stats.ATK) / ((float)defender.stats.DEF);
 
-            if(random.Next(100) > dodgeRate * 100)
+            if(random.Next(100) > dodgeRate * attack.BaseAcc)
                 return false;
             success = defender.entity.isDealtDamage((int) (damageMultiplier * attack.BaseDamage));
             

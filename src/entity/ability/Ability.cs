@@ -2,6 +2,18 @@ namespace BesmashContent
 {
     public abstract class Ability
     {
-        public string abilityName;
+        public Entity AbilityUser{get; set;}
+        public int AbilityCost{get; set;}
+        public string AbilityName{get; set;}
+        public Ability FollowUpAbility{get; set;}
+        public bool followUpOnSuccess{get; set;}
+        public bool followUpOnFail{get; set;}
+        public Ability (Entity user, int cost, string name)
+        {
+            AbilityUser = user;
+            AbilityCost = cost;
+            AbilityName = name;
+        }
+        public abstract void useAbility();
     }
 }
