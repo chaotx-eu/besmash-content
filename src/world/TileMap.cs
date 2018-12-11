@@ -1,21 +1,33 @@
 ﻿namespace BesmashContent {
+    using System.Runtime.Serialization;
     using System.Collections.Generic;
     using System.Linq;
 
     using Microsoft.Xna.Framework;
     using Microsoft.Xna.Framework.Graphics;
+    using Microsoft.Xna.Framework.Media;
     using Microsoft.Xna.Framework.Content;
 
+    [KnownType(typeof(Player))]
+    [DataContract(IsReference = true)]
     public class TileMap {
         /// Title of this map.
+        [DataMember]
         [ContentSerializer(Optional = true)]
         public string Title {get; set;} = "";
 
-        /// Describes Viewport width and height
+        /// Path to the file used for the played
+        /// BackgroundMusic while the map is loaded
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public string BackgroundMusicFile {get; set;} // TODO
+
+        /// Describes Viewports width and height
         /// in Tiles. The Viewport position is
         /// centered around the current Slave on
         /// this map. Reinitializes tile size
         /// and slave size/position when set.
+        [DataMember]
         [ContentSerializer(Optional = true)]
         public Point Viewport {
             get {
@@ -28,57 +40,24 @@
             }
         }
 
-        private Point viewport = new Point(4, 4);
-
         /// List of Tiles this map is made of.
+        [DataMember]
         [ContentSerializer(CollectionItemName = "Tile")]
         public List<Tile> Tiles {get; set;}
 
         /// List of Entities on this map.
+        [DataMember]
         [ContentSerializerIgnore]
-        public List<Entity> Entities {get;} = new List<Entity>();
-
-        /// Width of this map in tiles. Equal
-        /// to the x-coord of any Tile furthest
-        /// to the right.
-        [ContentSerializerIgnore]
-        public int Width {get {return width;}}
-        private int width = 0;
-
-        /// Height of this map in tiles. Equal
-        /// to the y-coord of any Tile furthest
-        /// to the bottom.
-        [ContentSerializerIgnore]
-        public int Height {get {return height;}}
-        private int height = 0;
-
-        /// Width in pixels of a single tile
-        /// on this map.
-        [ContentSerializerIgnore]
-        public int TileWidth {get {return tileWidth;}}
-        private int tileWidth;
-
-        /// Height in pixels of a single tile
-        /// on this map.
-        [ContentSerializerIgnore]
-        public int TileHeight {get {return tileHeight;}}
-        private int tileHeight;
-
-        /// X-coordinate of this map on
-        /// the screen.
-        [ContentSerializerIgnore]
-        public int X {get {return x;}}
-        private int x;
-
-        /// Y-coordinate of this map on
-        /// the screen.
-        [ContentSerializerIgnore]
-        public int Y {get {return y;}}
-        private int y;
+        public List<Entity> Entities {get {
+            return entities == null 
+                ? (entities = new List<Entity>())
+                : entities;
+        }}
 
         /// Movable object on this map. Gets affected
         /// by user input (e.g. Controller/Keyboard).
-        /// The Viewport is centered around this object.
+        /// Will always be centered on the screen.
+        [DataMember]
         [ContentSerializerIgnore]
         public Movable Slave {
             get { return slave;}
@@ -95,10 +74,52 @@
             }
         }
 
-        private Movable slave;
+        /// Width of this map in tiles. Equal
+        /// to the x-coord of any Tile furthest
+        /// to the right plus 1.
+        [ContentSerializerIgnore]
+        public int Width {get {return width;}}
 
-        /// Reference to running game.
+        /// Height of this map in tiles. Equal
+        /// to the y-coord of any Tile furthest
+        /// to the bottom plus 1.
+        [ContentSerializerIgnore]
+        public int Height {get {return height;}}
+
+        /// Width in pixels of a single tile
+        /// on this map.
+        [ContentSerializerIgnore]
+        public int TileWidth {get {return tileWidth;}}
+
+        /// Height in pixels of a single tile
+        /// on this map.
+        [ContentSerializerIgnore]
+        public int TileHeight {get {return tileHeight;}}
+
+        /// X-coordinate of this map on
+        /// the screen.
+        [ContentSerializerIgnore]
+        public int X {get {return x;}}
+
+        /// Y-coordinate of this map on
+        /// the screen.
+        [ContentSerializerIgnore]
+        public int Y {get {return y;}}
+        
+        /// Reference to the background song object
+        [ContentSerializerIgnore]
+        public Song BackgroundMusic {get; set;} // TODO
+
+        private Point viewport = new Point(4, 4);
+        private List<Entity> entities;
+        private Tile[][] tileArray;
+        private Movable slave;
         private Game game;
+
+        private int tileWidth, tileHeight;
+        private int width, height;
+        private int x, y;
+
 
         /// Initializes this map and all its objects.
         public void init(Game game) {
@@ -107,6 +128,15 @@
                 width = Tiles.Max(t => (int)t.Position.X) + 1;
                 height = Tiles.Max(t => (int)t.Position.Y) + 1;
             }
+
+            // Tiles are saved in an array for faster access
+            tileArray = new Tile[width][];
+
+            for(int x = 0; x < width; ++x)
+                tileArray[x] = new Tile[height];
+
+            Tiles.ForEach(t => tileArray
+                [(int)t.Position.X][(int)t.Position.Y] = t);
 
             initTileSize();
             initSlave();
@@ -133,7 +163,7 @@
             }
         }
 
-        /// Computes and sets screen X and Y coordinate
+        /// Computes and sets X and Y onscreen-coordinate
         /// dependent on the Viewport and the Slave position.
         public void align() {
             if(Slave != null) {
@@ -147,13 +177,21 @@
         public void load(ContentManager manager) {
             foreach(Tile tile in Tiles) tile.load(manager);
             foreach(Entity entity in Entities) entity.load(manager);
+
+            // testing: background music (TODO)
+            if(BackgroundMusicFile != null) try {
+                BackgroundMusic = manager.Load<Song>(BackgroundMusicFile);
+                MediaPlayer.Play(BackgroundMusic);
+            } catch(ContentLoadException) {
+                // ignore
+            }
         }
 
         /// Aligns the map and updates all game object on it.
         public void update(GameTime time) {
+            align();
             foreach(Tile tile in Tiles) tile.update(time);
             foreach(Entity entity in Entities) entity.update(time);
-            align();
         }
 
         /// Draws all game objects on this map.
@@ -179,6 +217,19 @@
                 Entities.Remove(e);
                 if(e == slave) Slave = null;
             }
+        }
+
+        public Tile getTile(int x, int y) {
+            if(x >= 0 && x < Width && y >= 0 && y < Height)
+                return tileArray[x][y];
+
+            return null;
+        }
+
+        public List<Entity> getEntities(int x, int y) {
+            return Entities.Where(e =>
+                e.Position.X == x &&
+                e.Position.Y == y).ToList();
         }
     }
 }

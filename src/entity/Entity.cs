@@ -1,7 +1,10 @@
-namespace BesmashContent {
-    public abstract class Entity : MapObject 
+namespace BesmashContent 
+{
+    public enum Facing {NORTH, EAST, SOUTH, WEST}
+    public class Entity : MapObject
     {
         public int MaxHP {get{return (BaseStats.VIT + StatsModifier.VIT) * 5;}}
+        public Facing Facing = Facing.SOUTH;
         public int CurrentHP {get{return CurrentHP;} 
             set
             {
