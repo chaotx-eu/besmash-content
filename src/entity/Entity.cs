@@ -2,7 +2,15 @@ namespace BesmashContent {
     public abstract class Entity : MapObject 
     {
         public int MaxHP {get{return (BaseStats.VIT + StatsModifier.VIT) * 5;}}
-        public int CurrentHP {get{return CurrentHP;} set{CurrentHP = value; if(CurrentHP<=0 && !this.status.immortal) status.dead = true;}}
+        public int CurrentHP {get{return CurrentHP;} 
+            set
+            {
+                CurrentHP = value;
+                if(CurrentHP<=0 && !this.status.immortal)
+                    status.dead = true;
+                else if(CurrentHP > MaxHP)
+                    CurrentHP = MaxHP;
+            }}
         public Stats BaseStats {get; set;}
         public Stats StatsModifier {get; set;}
         public Ability[] abilities{get; set;}

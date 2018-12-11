@@ -188,5 +188,10 @@ namespace BesmashContent
 
             return success;
         }
+
+        public void heal(BattleEntity source, BattleEntity reciever, int amount)
+        {
+            reciever.entity.CurrentHP += amount;
+        }
     }
 }

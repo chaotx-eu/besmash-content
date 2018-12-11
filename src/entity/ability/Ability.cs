@@ -2,6 +2,8 @@ namespace BesmashContent
 {
     public abstract class Ability
     {
+        public enum Type {attack, move, heal, cure, buff};
+        public Type type{get;set;}
         public Entity AbilityUser{get; set;}
         public int AbilityCost{get; set;}
         public string AbilityName{get; set;}

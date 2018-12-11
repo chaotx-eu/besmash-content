@@ -18,8 +18,12 @@ namespace BesmashContent
             BaseDamage = damage;
             maxRange = range;
             IsMagical = magical;
+            type = Type.attack;
         }
-
+        public void determineTarget()
+        {
+            //todo
+        }
         public bool isInRange(Entity target)    //Überprüft ob das Ziel in Reichweite des Angriffs ist
         {
             //todo
@@ -28,6 +32,7 @@ namespace BesmashContent
         
         public override void useAbility()
         {
+            this.determineTarget();
             bool success = false;   //Wird bei Erfolg mit true überschrieben
             BattleEntity attacker = this.AbilityUser.battleManager.fightingEntities.Find(e => e.entity == this.AbilityUser);    //Sucht die Battleentity des angreifers aus der Liste der fightingEntitys
             BattleEntity defender = this.AbilityUser.battleManager.fightingEntities.Find(e => e.entity == this.target);         //Sucht die Battleentity des verteidiger aus der Liste der fightingEntitys
