@@ -6,7 +6,7 @@ namespace BesmashContent
         public int roundDuration{get;set;}  //-1 for permanent
         public int turnDuration{get;set;}   //-1 to only count rounds
         public int BuffStrength{get;set;}   //multiple of 25% bonus
-        public BuffAbility(Entity user, int cost, string name, int range, Buff.Type type, int rounds, int turns, int strength) : base(user, cost, name, range)
+        public BuffAbility(Creature user, int cost, string name, int range, Buff.Type type, int rounds, int turns, int strength) : base(user, cost, name, range)
         {
             BuffType = type;
             roundDuration = rounds;
@@ -17,7 +17,7 @@ namespace BesmashContent
         public override void useAbility()
         {
             this.determineTarget();
-            BattleEntity reciever = this.AbilityUser.battleManager.fightingEntities.Find(e => e.entity == this.target);
+            FightingInfo reciever = this.AbilityUser.battleManager.fightingEntities.Find(e => e.Creature == this.target);
             reciever.battleBuffs.Add(new Buff(reciever, BuffType, roundDuration, turnDuration, BuffStrength));
 
             if(followUpOnFail || followUpOnSuccess)

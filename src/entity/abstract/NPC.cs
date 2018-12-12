@@ -1,6 +1,6 @@
 namespace BesmashContent
 {
-    public abstract class NPC : Entity
+    public abstract class NPC : Creature
     {
         //todo
     }

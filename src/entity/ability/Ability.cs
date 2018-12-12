@@ -4,13 +4,13 @@ namespace BesmashContent
     {
         public enum Type {attack, move, heal, cure, buff};
         public Type type{get;set;}
-        public Entity AbilityUser{get; set;}
+        public Creature AbilityUser{get; set;}
         public int AbilityCost{get; set;}
         public string AbilityName{get; set;}
         public Ability FollowUpAbility{get; set;}
         public bool followUpOnSuccess{get; set;}
         public bool followUpOnFail{get; set;}
-        public Ability (Entity user, int cost, string name)
+        public Ability (Creature user, int cost, string name)
         {
             AbilityUser = user;
             AbilityCost = cost;

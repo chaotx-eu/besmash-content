@@ -5,7 +5,7 @@ namespace BesmashContent
     {
         public Vector2[] path{get;set;}
 
-        public MovementAbility(Entity user, int cost, string name, Vector2[] path) : base(user, cost, name)
+        public MovementAbility(Creature user, int cost, string name, Vector2[] path) : base(user, cost, name)
         {
             this.path = path;
         }
