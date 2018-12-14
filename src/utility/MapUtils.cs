@@ -69,5 +69,95 @@ namespace BesmashContent.Utility {
 
             return result;
         }
+
+        public static Point[] shortestPath(Point start, Point destination, int maxDistance)
+        {
+            int offset = maxDistance; //halbe Größe des Arrays (entfernung vom Mittelpunkt des Arrays (startpunkt) zu den Rändern)
+            //Nur ein kleiner Teil der gesamtmap wird abgebildet.
+            //Bitte nur gerade Zahlen nehmen.
+            //Die bisherigen mindestkosten zu den Feldern
+            int[][] map;
+            //Array initialisierung
+            map = new int[25][];
+            for(int i = 0; i < map.Length; i++)
+            {
+                map[i] = new int[25];
+                for(int j = 0; j < map.Length; j++)
+                {
+                    map[i][j] = -1; //Standard Wert -1 um unbesuchte Felder zu markieren
+                }
+            }
+
+            List<PathfindingNode> openList = new List<PathfindingNode>();
+            List<PathfindingNode> closedList = new List<PathfindingNode>();
+
+            openList.Add(new PathfindingNode(0, start));    //startpunkt in der Mitte platzieren
+            map[offset][offset] = 0;
+            do
+            {
+                PathfindingNode current = new PathfindingNode(-1, new Point(0,0));
+                int i = 0;
+                while(current.step < 0 && openList.Count > 0)
+                {
+                    current = openList.Find(x => x.step == i);  //Die Node mit den niedrigsten steps wird der Liste entnommen
+                }
+
+                if (current.position == destination)    //Falls der Zielpunkt erreicht wurde, wird der Pfad ausgegeben
+                    return current.path();
+                
+                closedList.Add(current);
+
+                for(int j = 0; i < 4; i++)
+                {
+                    int step = current.step + 1;
+                    PathfindingNode.Direction direction = PathfindingNode.Direction.Up;
+                    Point nextPosition = new Point(0,0);
+
+                    //Nach und nach werden die verschiedenen successor erstellt
+                    switch (j)
+                    {
+                        case 0 : 
+                            direction = PathfindingNode.Direction.Up;
+                            nextPosition = new Point(current.position.X, current.position.Y - 1);
+                            break;
+                        case 1 :
+                            direction = PathfindingNode.Direction.Down;
+                            nextPosition = new Point(current.position.X, current.position.Y + 1);
+                            break;
+                        case 2 :
+                            direction = PathfindingNode.Direction.Right;
+                            nextPosition = new Point(current.position.X + 1, current.position.Y);
+                            break;
+                        case 3 :
+                            direction = PathfindingNode.Direction.Left;
+                            nextPosition = new Point(current.position.X - 1, current.position.Y);
+                            break;
+                    }
+
+                    if(MapUtils.isSpaceFree(nextPosition))
+                    {
+                        PathfindingNode successor = new PathfindingNode(step, nextPosition);
+                        //Sicherstellen, dass die neue Position in dem Bereich ist, der getestet wird
+                        if(nextPosition.X - start.X >= offset * -1 && nextPosition.X - start.X < offset && nextPosition.Y - start.Y >= offset * -1 && nextPosition.Y - start.Y < offset)
+                        {
+                            //Teste, ob es bereits einen effektiveren Weg gibt
+                            if(map[nextPosition.X - start.X + offset][nextPosition.Y - start.Y + offset] == -1 || map[nextPosition.X - start.X + offset][nextPosition.Y - start.Y + offset] > step)
+                            {
+                                current.add(successor, direction);
+                                map[nextPosition.X - start.X + offset][nextPosition.Y - start.Y + offset] = step; //neuen niedrigsten weg zu dme Feld erstellen
+                                openList.Add(successor);
+                            }
+                        }
+                    }                    
+                }
+
+            } while (true);
+        }
+
+        public static bool isSpaceFree(Point position)
+        {
+            //todo
+            return true;
+        }
     }
 }
