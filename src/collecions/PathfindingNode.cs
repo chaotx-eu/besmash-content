@@ -51,7 +51,7 @@ namespace BesmashContent
             PathfindingNode temp = this;
             Point[] path = new Point[step];
             int i = step;
-            while(temp.previous != null && i <= 0)
+            while(temp.previous != null && i >= 0)
             {
                 switch (pathBack)
                 {
