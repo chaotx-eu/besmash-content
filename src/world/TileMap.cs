@@ -11,6 +11,9 @@
     [KnownType(typeof(Player))]
     [DataContract(IsReference = true)]
     public class TileMap {
+        /// Alpha value for all maps and its content
+        public static float MapAlpha {get; set;} = 1f;
+
         /// Title of this map.
         [DataMember]
         [ContentSerializer(Optional = true)]
