@@ -12,6 +12,9 @@ namespace BesmashContent
                 else if(CurrentHP > MaxHP)
                     CurrentHP = MaxHP;
             }}
+        public int MaxAP{get;set;}
+        public int CurrentAP{get{return CurrentAP;}set{CurrentAP = value; if(CurrentAP > MaxAP) CurrentAP = MaxAP;}}
+
         public Stats BaseStats {get; set;}
         public Stats StatsModifier {get; set;}
         public Ability[] abilities{get; set;}

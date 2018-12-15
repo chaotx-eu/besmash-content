@@ -69,8 +69,24 @@ namespace BesmashContent.Utility {
 
             return result;
         }
+        public static int ManhattenDistance(Point a, Point b)
+        {
+            int x = a.X - b.X;
+            int y = a.Y - b.Y;
+            return (x < 0 ? x * -1 : x) + (y < 0 ? y * -1 : y);
+        }
+        public static int ManhattenDistance(Vector2 a, Vector2 b)
+        {
+            int x = (int)a.X - (int)b.X;
+            int y = (int)a.Y - (int)b.Y;
+            return (x < 0 ? x * -1 : x) + (y < 0 ? y * -1 : y);
+        }
 
-        public static Point[] shortestPath(Point start, Point destination, int maxDistance)
+        public static Point[] shortestPath(Vector2 start, Vector2 destination, int maxDistance, TileMap tileMap)
+        {
+            return shortestPath(new Point((int)start.X, (int) start.Y), new Point((int)destination.X, (int)destination.Y), maxDistance, tileMap);
+        }
+        public static Point[] shortestPath(Point start, Point destination, int maxDistance, TileMap tileMap)
         {
             int offset = maxDistance; //halbe Größe des Arrays (entfernung vom Mittelpunkt des Arrays (startpunkt) zu den Rändern)
             //Nur ein kleiner Teil der gesamtmap wird abgebildet.
@@ -134,7 +150,7 @@ namespace BesmashContent.Utility {
                             break;
                     }
 
-                    if(MapUtils.isSpaceFree(nextPosition))
+                    if(MapUtils.isSpaceFree(nextPosition, tileMap))
                     {
                         PathfindingNode successor = new PathfindingNode(step, nextPosition);
                         //Sicherstellen, dass die neue Position in dem Bereich ist, der getestet wird
@@ -151,13 +167,76 @@ namespace BesmashContent.Utility {
                     }                    
                 }
 
-            } while (true);
+            } while (openList.Count > 0);
+
+            return new Point[0];
+        }
+        //Überprüft, ob ein Feld frei ist
+        public static bool isSpaceFree(Point position, TileMap map)
+        {
+            Tile tile = map.getTile(position.X, position.Y);
+            if(tile.Solid || map.getEntities(position.X, position.Y).Count > 0)
+                return false;
+            else
+                return true;
+        }
+        //Überprüft ob ein Feld frei ist, unter der berücksichtigung, dass sich Kreaturen durch verbündete bewegen können.
+        public static bool isSpaceFree(Point position, TileMap map, Creature mover)
+        {
+            Tile tile = map.getTile(position.X, position.Y);
+            //Ist das Tile solid
+            if(tile.Solid)
+                return false;
+            //Ist das Feld leer
+            else if (map.getEntities(position.X, position.Y).Count > 0)
+            {
+                //Sind die Entities auf dem Feld "feindlich" zur bewegenden kreatur
+                if (map.getEntities(position.X, position.Y).Exists
+                (
+                    x => FightingInfo.IsFriendlyTo
+                    (
+                        mover.battleManager.fightingEntities.Find(y => y.Creature == x),
+                        mover.battleManager.fightingEntities.Find(y => y.Creature == mover)
+                    )
+                ))
+                {
+                    return true;
+                }
+                else
+                    return false;
+            }
+            else
+                return true;
         }
 
-        public static bool isSpaceFree(Point position)
+        public static Creature NearestEnemy(Creature current, TileMap map)
         {
-            //todo
-            return true;
+            List<Creature> enemies = new List<Creature>();
+            foreach(Entity e in map.Entities)
+            {
+                if (e is Creature)
+                {
+                    if (!FightingInfo.IsFriendlyTo(current.battleManager.fightingEntities.Find(x => x.Creature == current), current.battleManager.fightingEntities.Find(x => x.Creature == e)))
+                    {
+                        enemies.Add((Creature)e);
+                    }
+                }
+            }
+            if(enemies.Count == 0)
+                return null;
+            Creature nearest = enemies[0];
+            int distance = ManhattenDistance(new Point((int)current.Position.X, (int)current.Position.Y), new Point((int)nearest.Position.X, (int)nearest.Position.Y));
+
+            foreach(Creature e in enemies)
+            {
+                int temp = ManhattenDistance(new Point((int)current.Position.X, (int)current.Position.Y), new Point((int)e.Position.X, (int)e.Position.Y));
+                if(temp < distance)
+                {
+                    distance = 0;
+                    nearest = e;
+                }
+            }
+            return nearest;
         }
     }
 }

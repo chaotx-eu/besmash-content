@@ -6,6 +6,7 @@ namespace BesmashContent
     {
         public List<FightingInfo> fightingEntities;   //Eine Liste in der alle am Kampf teilnehmenden Entities genau einmal enthalten sind
         public Random random;
+        public TileMap map;
         public BattleManager()
         {
             fightingEntities = new List<FightingInfo>();
@@ -65,9 +66,9 @@ namespace BesmashContent
                 FightingInfo.Creature.nextTurn();
         }
 
-        public void addToBattle(Creature Creature)
+        public void addToBattle(Creature Creature, FightingInfo.Faction alignment)
         {
-            FightingInfo FightingInfo = new FightingInfo(Creature);     //Erstellt eine FightingInfo, die auf die angegebene Creature verweist
+            FightingInfo FightingInfo = new FightingInfo(Creature, alignment);     //Erstellt eine FightingInfo, die auf die angegebene Creature verweist
 
             fightingEntities.Add(FightingInfo);
         }
