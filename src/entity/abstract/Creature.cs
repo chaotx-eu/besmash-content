@@ -2,6 +2,14 @@ namespace BesmashContent
 {
     public abstract class Creature : Movable
     {
+        /// Creatures may wear armor...
+        public Helmet Helmet {get; set;}
+        public Chestplate Chestplate {get; set;}
+        public Pants Pants {get; set;}
+
+        /// ...and hold a weapon
+        public Weapon Weapon {get; set;}
+
         public int MaxHP {get{return (BaseStats.VIT + StatsModifier.VIT) * 5;}}
         public int CurrentHP {get{return CurrentHP;} 
             set
