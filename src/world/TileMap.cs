@@ -9,8 +9,12 @@
     using Microsoft.Xna.Framework.Content;
 
     [KnownType(typeof(Player))]
+    [KnownType(typeof(NeutralNPC))]
     [DataContract(IsReference = true)]
     public class TileMap {
+        /// Alpha value for all maps and its content
+        public static float MapAlpha {get; set;} = 1f;
+
         /// Title of this map.
         [DataMember]
         [ContentSerializer(Optional = true)]
@@ -181,7 +185,7 @@
             // testing: background music (TODO)
             if(BackgroundMusicFile != null) try {
                 BackgroundMusic = manager.Load<Song>(BackgroundMusicFile);
-                MediaPlayer.Play(BackgroundMusic);
+                // MediaPlayer.Play(BackgroundMusic);
             } catch(ContentLoadException) {
                 // ignore
             }

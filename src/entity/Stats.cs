@@ -1,7 +1,9 @@
-namespace BesmashContent
-{
-    public class Stats
-    {
+namespace BesmashContent {
+    using System;
+
+    public class Stats {
+        public static float MIN_MOD {get;} = 0.25f;
+
         //Die Basisstats, die durch multiplikatoren verändert werden könnten
         //Normal Stats
         public int BaseVIT{get; set;}
@@ -18,17 +20,61 @@ namespace BesmashContent
 
         //Die Modifikatoren, der Basiswerte (im Normalfall immer x1)
         //Normal Stats
-        public float VITModifier{get{if(VITModifier <= 0.25f) return 0.25f; else return VITModifier;} set{VITModifier = value;}}
-        public float ATKModifier{get{if(ATKModifier <= 0.25f) return 0.25f; else return ATKModifier;} set{ATKModifier = value;}}
-        public float MGAModifier{get{if(MGAModifier <= 0.25f) return 0.25f; else return MGAModifier;} set{MGAModifier = value;}}
-        public float DEFModifier{get{if(DEFModifier <= 0.25f) return 0.25f; else return DEFModifier;} set{DEFModifier = value;}}
-        public float MGDModifier{get{if(MGDModifier <= 0.25f) return 0.25f; else return MGDModifier;} set{MGDModifier = value;}}
-        public float AGIModifier{get{if(AGIModifier <= 0.25f) return 0.25f; else return AGIModifier;} set{AGIModifier = value;}}
-        //Additional Stats
-        public float ACCModifier{get{if(ACCModifier <= 0.25f) return 0.25f; else return ACCModifier;} set{ACCModifier = value;}}
-        public float DDGModifier{get{if(DDGModifier <= 0.25f) return 0.25f; else return DDGModifier;} set{DDGModifier = value;}}
-        public float SPDModifier{get{if(SPDModifier <= 0.25f) return 0.25f; else return SPDModifier;} set{SPDModifier = value;}}
+        private float vitModifier;
+        public float VITModifier {
+            get {return Math.Min(MIN_MOD, vitModifier);}
+            set {vitModifier = value;}
+        }
 
+        private float atkModifier;
+        public float ATKModifier{
+            get {return Math.Min(MIN_MOD, atkModifier);}
+            set {atkModifier = value;}
+        }
+
+        private float mgaModifier;
+        public float MGAModifier{
+            get {return Math.Min(MIN_MOD, mgaModifier);}
+            set {mgaModifier = value;}
+        }
+
+        private float defModifier;
+        public float DEFModifier{
+            get {return Math.Min(MIN_MOD, defModifier);}
+            set {defModifier = value;}
+        }
+
+        private float mgdModifier;
+        public float MGDModifier{
+            get {return Math.Min(MIN_MOD, mgdModifier);}
+            set {mgdModifier = value;}
+        }
+
+        private float agiModifier;
+        public float AGIModifier{
+            get {return Math.Min(MIN_MOD, agiModifier);}
+            set {agiModifier = value;}
+        }
+
+
+        //Additional Stats
+        private float accModifier;
+        public float ACCModifier{
+            get {return Math.Min(MIN_MOD, accModifier);}
+            set {accModifier = value;}
+        }
+
+        private float ddgModifier;
+        public float DDGModifier{
+            get {return Math.Min(MIN_MOD, ddgModifier);}
+            set {ddgModifier = value;}
+        }
+
+        private float spdModifier;
+        public float SPDModifier{
+            get {return Math.Min(MIN_MOD, spdModifier);}
+            set {spdModifier = value;}
+        }
 
         //Die Tatsächlichen Werte werden automatisch errechnet
         public int VIT {get{return (int)(VITModifier * BaseVIT);}} //Vitalität (bestimmt die maximalen HP)
@@ -42,30 +88,13 @@ namespace BesmashContent
         public int SPD {get{return (int)(ACCModifier * BaseSPD);}} //Speed (Anzahl der Felder, die man pro RUnde gehen kann)
 
         //Komplett lehre Stats (zum beispiel für Buffs)
-        public Stats()
-        {
-            this.BaseVIT = 0;
-            this.BaseATK = 0;
-            this.BaseMGA = 0;
-            this.BaseDEF = 0;
-            this.BaseMGD = 0;
-            this.BaseAGI = 0;
-
-            this.BaseACC = 0.0f;
-            this.BaseDDG = 0.0f;
-            this.BaseSPD = 0;
-
-            this.VITModifier = 0.0f;
-            this.ATKModifier = 0.0f;
-            this.MGAModifier = 0.0f;
-            this.DEFModifier = 0.0f;
-            this.MGDModifier = 0.0f;
-            this.AGIModifier = 0.0f;
-
-            this.ACCModifier = 0.0f;
-            this.DDGModifier = 0.0f;
-            this.SPDModifier = 0.0f;
-        }
+        public Stats() {}
+        // wird eh alles mit 0 initialisiert
+        // eleganter waere jedoch:
+        //
+        // public Stats() : this(0, 0, 0, 0, 0, 0) {}
+        // hier wuerden dann aber auch die modifier mit
+        // entsprechenden werten initialisiert werden
 
         //Eine vereinfachte Reihe Stats wird erzeugt, mit standard modifikatoren
         public Stats(int vit, int atk, int mga, int def, int mgd, int agi)

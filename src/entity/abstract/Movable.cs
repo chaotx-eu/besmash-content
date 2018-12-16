@@ -41,6 +41,17 @@ namespace BesmashContent {
         [DataMember]
         public bool Moving {get; set;}
 
+        /// The amount of different sprites on the horizontal
+        /// pane of the spritesheet. The vertical ammount will
+        /// always be four (0:TOP, 1:EAST, 2:SOUTH, 3:WEST)
+        [DataMember]
+        public int SpriteCount {get; set;} = 1;
+
+        /// How many sprites are shown when moving the distance
+        /// of one tile
+        [DataMember]
+        public int SpritesPerStep {get; set;} = 1;
+
         /// Event handler for handling move events i.e.
         /// will be triggered after this Movable started moving.
         public event MoveStartedHandler MoveStartedEvent;
@@ -104,6 +115,7 @@ namespace BesmashContent {
             }
         }
         
+        float stepTimer, idleTimer;
         public override void update(GameTime time) {
             if(ContainingMap.Slave != this)
                 base.update(time);
@@ -112,6 +124,13 @@ namespace BesmashContent {
                 int et = time.ElapsedGameTime.Milliseconds;
                 float positionX = Position.X;
                 float positionY = Position.Y;
+                idleTimer = 0;
+                stepTimer += et;
+
+                if(stepTimer*SpritesPerStep >= StepTime) {
+                    updateSprite();
+                    stepTimer = 0;
+                }
 
                 if(StepTime > 0) {
                     float fragment = et/(float)StepTime;
@@ -142,7 +161,24 @@ namespace BesmashContent {
                 Position = new Vector2(positionX, positionY);
                 if(!Moving) onMoveFinished(new MoveEventArgs(
                     Position.ToPoint(), Target));
-            }
+
+            } else if(idleTimer < 300)
+                idleTimer += time.ElapsedGameTime.Milliseconds;
+
+            if(idleTimer >= 300)
+                updateSprite(true);
+        }
+
+        private void updateSprite() {
+            updateSprite(false);
+        }
+
+        private void updateSprite(bool reset) {
+            int w = SpriteRectangle.Width;
+            int h = SpriteRectangle.Height;
+            int y = ((int)Facing)*SpriteRectangle.Height;
+            int x = reset ? 0 : ((SpriteRectangle.X + w) % (SpriteCount*w));
+            SpriteRectangle = new Rectangle(x, y, w, h);
         }
 
         protected virtual void onMoveStarted(MoveEventArgs args) {

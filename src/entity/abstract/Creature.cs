@@ -2,18 +2,38 @@ namespace BesmashContent
 {
     public abstract class Creature : Movable
     {
+        /// Creatures may wear armor...
+        public Helmet Helmet {get; set;}
+        public Chestplate Chestplate {get; set;}
+        public Pants Pants {get; set;}
+
+        /// ...and hold a weapon
+        public Weapon Weapon {get; set;}
+
         public int MaxHP {get{return (BaseStats.VIT + StatsModifier.VIT) * 5;}}
-        public int CurrentHP {get{return CurrentHP;} 
-            set
-            {
-                CurrentHP = value;
-                if(CurrentHP<=0 && !this.status.immortal)
+
+        private int currentHP;
+        public int CurrentHP {
+            get {return currentHP;} 
+            set {
+                currentHP = value;
+                if(currentHP<=0 && !this.status.immortal)
                     status.dead = true;
-                else if(CurrentHP > MaxHP)
-                    CurrentHP = MaxHP;
-            }}
+                else if(currentHP > MaxHP)
+                    currentHP = MaxHP;
+            }
+        }
+
         public int MaxAP{get;set;}
-        public int CurrentAP{get{return CurrentAP;}set{CurrentAP = value; if(CurrentAP > MaxAP) CurrentAP = MaxAP;}}
+
+        private int currentAP;
+        public int CurrentAP {
+            get {return currentAP;}
+            set {
+                currentAP = value;
+                if(currentAP > MaxAP) currentAP = MaxAP;
+            }
+        }
 
         public Stats BaseStats {get; set;}
         public Stats StatsModifier {get; set;}
@@ -22,13 +42,19 @@ namespace BesmashContent
 
         public BattleManager battleManager{get; set;} //Wird übergeben damit die Creatures nen überblick über das Schlachtfeld haben
 
-        public Creature()
-        {
-            
-        }
+        public Creature() : this(null) {} // vermeidet doppelten code
         public Creature(BattleManager manager)
         {
             battleManager = manager;
+
+            // duerfen nicht null sein sonst krachts z.B. bei
+            // MaxHP.get oder CurrentHP.set. Wenn entities aus
+            // einer xml datei geladen werden passiert dies nach
+            // dem konstruktor aufruf und die hier gesetzten werte
+            // werden ggf. ueberschrieben
+            BaseStats = new Stats();
+            StatsModifier = new Stats();
+            status = new Status(); // sicherheitshalber
         }
 
         public virtual void nextTurn()

@@ -43,27 +43,38 @@ namespace BesmashContent {
         };
 
         /// Returns the translation of the passed
-        /// word, which is expected to be english
-        /// or the word itself if not fond.
+        /// word which is expected to be english
+        /// or translates the word as a whole
+        /// sentence (see below) if not found.
         ///
         /// If isSentence is set to true the word string
-        /// will be split between spaces and the results
-        /// will be translated independently.
+        /// will be split between specialSymbols and the
+        /// results will be translated independently.
         ///
         /// Capitalization is irrelevant only for the first
-        /// letter and special characters (e.g. '.,!?+-/=')
+        /// letter (TODO) and special characters (e.g. '.,!?+-/=')
         /// will be ignored if isSentence is true.
         public string translate(string word, bool isSentence) {
+            return translate(word, isSentence, isSentence);
+        }
+
+        /// Overload without public access to prevent infinite recursion
+        private string translate(string word, bool isSentence, bool wasSentence) {
             string translation = word;
-            if(isSentence) word.Trim().Split(specialSymbols)
+            if(isSentence) word.Trim()
+                .Split(specialSymbols)
                 .Distinct().ToList()
-                .ForEach(w => translation.Replace(w, translate(w)));
+                .ForEach(w => translation.Replace(w, translate(w, false, true)));
             else {
                 string upper = char.ToUpper(word[0]) + word.Substring(1);
                 string lower = char.ToLower(word[0]) + word.Substring(1);
                 translation = Words.ContainsKey(word) ? Words[word]
                     : Words.ContainsKey(upper) ? Words[upper]
                     : Words.ContainsKey(lower) ? Words[lower] : word;
+
+                // try to translate as sentence if word not found
+                if(translation.Equals(word) && !wasSentence)
+                    return translate(word, true, true);
             }
 
             return translation;
