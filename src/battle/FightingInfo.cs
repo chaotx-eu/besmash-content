@@ -1,7 +1,7 @@
 namespace BesmashContent
 {
     using System.Collections.Generic;
-    public struct FightingInfo
+    public class FightingInfo
     {
         public enum Faction {Allied, Hostile, Neutral, Solo, ThirdParty}
         public Faction faction{get;set;}
@@ -73,7 +73,7 @@ namespace BesmashContent
                         case Faction.Allied : return false;
                         case Faction.Hostile : return false;
                         case Faction.Neutral : return false;
-                        case Faction.Solo : return false;
+                        case Faction.Solo : if(a == b) return true; else return false;
                         case Faction.ThirdParty : return false;
                         default : return false;
                     }

@@ -74,6 +74,12 @@ namespace BesmashContent
         }
 
         public AIParameters AI{get;set;}
+
+
+        public NPC(BattleManager manager, Stats stats, Ability[] abilities, FightingStyle style) : base(manager, stats, abilities)
+        {
+            AI = new AIParameters(style, null, null, 5, abilities);
+        }
         public Ability nextMove()
         {
             Ability toUse = null;
@@ -209,7 +215,7 @@ namespace BesmashContent
                     } break;
                 
             }
-
+            
             AI.usedAbilities.Add(toUse);
             return toUse;
         }

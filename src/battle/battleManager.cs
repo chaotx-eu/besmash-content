@@ -7,9 +7,11 @@ namespace BesmashContent
         public List<FightingInfo> fightingEntities;   //Eine Liste in der alle am Kampf teilnehmenden Entities genau einmal enthalten sind
         public Random random;
         public TileMap map;
-        public BattleManager()
+        public BattleManager(TileMap tileMap)
         {
             fightingEntities = new List<FightingInfo>();
+            random = new Random();
+            map = tileMap;
         }
 
         //Berechnet die Reihenfolge in der die Kämpfenden Creatures agieren dürfen und arbeitet sie der Reihe nach ab

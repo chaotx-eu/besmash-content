@@ -37,7 +37,7 @@ namespace BesmashContent
 
         public Stats BaseStats {get; set;}
         public Stats StatsModifier {get; set;}
-        public Ability[] abilities{get; set;}
+        public Ability[] Abilities{get; set;}
         public Status status{get; set;}
 
         public BattleManager battleManager{get; set;} //Wird übergeben damit die Creatures nen überblick über das Schlachtfeld haben
@@ -53,6 +53,15 @@ namespace BesmashContent
             // dem konstruktor aufruf und die hier gesetzten werte
             // werden ggf. ueberschrieben
             BaseStats = new Stats();
+            StatsModifier = new Stats();
+            status = new Status(); // sicherheitshalber
+        }
+        public Creature(BattleManager manager, Stats stats, Ability[] abilities)
+        {
+            battleManager = manager;
+            MaxAP = 100;
+            BaseStats = stats;
+            Abilities = abilities;
             StatsModifier = new Stats();
             status = new Status(); // sicherheitshalber
         }
