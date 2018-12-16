@@ -9,6 +9,7 @@
     using Microsoft.Xna.Framework.Content;
 
     [KnownType(typeof(Player))]
+    [KnownType(typeof(NeutralNPC))]
     [DataContract(IsReference = true)]
     public class TileMap {
         /// Alpha value for all maps and its content
