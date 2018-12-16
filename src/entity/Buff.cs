@@ -4,14 +4,14 @@ namespace BesmashContent
     {
         public enum Type{VIT, ATK, MGA, DEF, MGD, AGI, ACC, DDG, SPD}
 
-        private BattleEntity target{get;set;}
+        private FightingInfo target{get;set;}
         private Type type{get;set;}
         public int roundsLeft{get;set;} //Set -1 for a permanent Buff
         public int turnsLeft{get;set;} //Set -1, for a Buff, that last's an entire Round
         private int Strength{get;set;}  //Negative Values for debuffs
         public bool Over{get;set;}
 
-        public Buff(BattleEntity target, Type type, int rounds, int turns, int strength)
+        public Buff(FightingInfo target, Type type, int rounds, int turns, int strength)
         {
             this.target = target;
             this.type = type;

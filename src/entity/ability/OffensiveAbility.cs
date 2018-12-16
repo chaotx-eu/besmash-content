@@ -11,9 +11,9 @@ namespace BesmashContent
         public struct PossibleBuff{public Buff.Type type; public int rounds; public int turns; public int strength; public int chance /* 1-100 */;};
         public PossibleBuff[] potentialBuffs{get;set;}  //Werden bei einem Treffer BUffs oder Debuffs aufs target gelegt.
         public PossibleStatus[] potentialStatus{get;set;}   //werden bei einem Treffer Statuseffekte aufs Target gelegt
-        public Entity target{get{return target;} set{if(isInRange(value)) target = value;}} //Wer soll das Ziel der Attacke sein? (Nur möglich, wennd as Ziel in Reichweite ist)
+        public Creature target{get{return target;} set{if(isInRange(value)) target = value;}} //Wer soll das Ziel der Attacke sein? (Nur möglich, wennd as Ziel in Reichweite ist)
 
-        public OffensiveAbility(Entity user, int cost, string name, int damage, int range, bool magical) : base(user, cost, name)
+        public OffensiveAbility(Creature user, int cost, string name, int damage, int range, bool magical) : base(user, cost, name)
         {
             BaseDamage = damage;
             maxRange = range;
@@ -24,7 +24,7 @@ namespace BesmashContent
         {
             //todo
         }
-        public bool isInRange(Entity target)    //Überprüft ob das Ziel in Reichweite des Angriffs ist
+        public bool isInRange(Creature target)    //Überprüft ob das Ziel in Reichweite des Angriffs ist
         {
             //todo
             return true;        //Bis ich es implementiert hab, ist erstmal alles in Reichweite
@@ -34,8 +34,8 @@ namespace BesmashContent
         {
             this.determineTarget();
             bool success = false;   //Wird bei Erfolg mit true überschrieben
-            BattleEntity attacker = this.AbilityUser.battleManager.fightingEntities.Find(e => e.entity == this.AbilityUser);    //Sucht die Battleentity des angreifers aus der Liste der fightingEntitys
-            BattleEntity defender = this.AbilityUser.battleManager.fightingEntities.Find(e => e.entity == this.target);         //Sucht die Battleentity des verteidiger aus der Liste der fightingEntitys
+            FightingInfo attacker = this.AbilityUser.battleManager.fightingEntities.Find(e => e.Creature == this.AbilityUser);    //Sucht die FightingInfo des angreifers aus der Liste der fightingCreatures
+            FightingInfo defender = this.AbilityUser.battleManager.fightingEntities.Find(e => e.Creature == this.target);         //Sucht die FightingInfo des verteidiger aus der Liste der fightingCreatures
             
             success = AbilityUser.battleManager.attack(attacker, defender, this);   //Der Angriff wird, über den Battlemanager ausgeführt
 
@@ -50,7 +50,7 @@ namespace BesmashContent
                 foreach (PossibleStatus s in potentialStatus)   //Bei einem Erfolg werden Statuseffekte applied
                 {
                     if (s.chance >= this.AbilityUser.battleManager.random.Next(100))
-                        defender.entity.status.addStatus(s.type);
+                        defender.Creature.status.addStatus(s.type);
                 }
 
                 if(followUpOnSuccess)     //Bei einem Erfolg wird die Followup Ability gestartet

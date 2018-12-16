@@ -1,11 +1,8 @@
-namespace BesmashContent 
+namespace BesmashContent
 {
-    public enum Facing {NORTH, EAST, SOUTH, WEST}
-<<<<<<< HEAD
-    public class Entity : MapObject
+    public abstract class Creature : Movable
     {
         public int MaxHP {get{return (BaseStats.VIT + StatsModifier.VIT) * 5;}}
-        public Facing Facing = Facing.SOUTH;
         public int CurrentHP {get{return CurrentHP;} 
             set
             {
@@ -15,18 +12,21 @@ namespace BesmashContent
                 else if(CurrentHP > MaxHP)
                     CurrentHP = MaxHP;
             }}
+        public int MaxAP{get;set;}
+        public int CurrentAP{get{return CurrentAP;}set{CurrentAP = value; if(CurrentAP > MaxAP) CurrentAP = MaxAP;}}
+
         public Stats BaseStats {get; set;}
         public Stats StatsModifier {get; set;}
         public Ability[] abilities{get; set;}
         public Status status{get; set;}
 
-        public BattleManager battleManager{get; set;} //Wird übergeben damit die Entitys nen überblick über das Schlachtfeld haben
+        public BattleManager battleManager{get; set;} //Wird übergeben damit die Creatures nen überblick über das Schlachtfeld haben
 
-        public Entity()
+        public Creature()
         {
             
         }
-        public Entity(BattleManager manager)
+        public Creature(BattleManager manager)
         {
             battleManager = manager;
         }
@@ -48,7 +48,7 @@ namespace BesmashContent
         }
         
         //Bestimmte Events die überschrieben werde können um Effekte durch bestimmte taten auszulösen.
-        public virtual void onDamage() //Entity hat schaden erhalten
+        public virtual void onDamage() //Creature hat schaden erhalten
         {
             /*
             Aufwachen, triggern von abilities etc.
@@ -63,23 +63,18 @@ namespace BesmashContent
                 }
             }
         }
-        public virtual void onHit() //Entity greift erfolgreich einen Gegner an
+        public virtual void onHit() //Creature greift erfolgreich einen Gegner an
         {
             //Kann überschrieben werden.
         }
-        public virtual void onKill() //Entity tötet erfolgreich einen Gegner
+        public virtual void onKill() //Creature tötet erfolgreich einen Gegner
         {
             //Kann überschrieben werden.
         }
 
-        public virtual void onDeath() //Entity ist gestorben
+        public virtual void onDeath() //Creature ist gestorben
         {
             battleManager.removeFromBattle(this);
         }
-=======
-    public abstract class Entity : MapObject 
-    {
-        public Facing Facing = Facing.SOUTH;
->>>>>>> 7f7d219bfd78823cd6aaa1a5d6d6ff492e2c2343
     }
 }

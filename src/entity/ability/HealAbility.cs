@@ -3,7 +3,7 @@ namespace BesmashContent
     public class HealAbility : DeffensiveAbility
     {
         public int HealAmount{get;set;}
-        public HealAbility(Entity user, int cost, string name, int range, int healing) : base(user, cost, name, range)
+        public HealAbility(Creature user, int cost, string name, int range, int healing) : base(user, cost, name, range)
         {
             HealAmount = healing;
             this.type = Type.heal;
@@ -12,8 +12,8 @@ namespace BesmashContent
         public override void useAbility()
         {
             this.determineTarget();
-            BattleEntity source = this.AbilityUser.battleManager.fightingEntities.Find(e => e.entity == this.AbilityUser);
-            BattleEntity reciever = this.AbilityUser.battleManager.fightingEntities.Find(e => e.entity == this.target);
+            FightingInfo source = this.AbilityUser.battleManager.fightingEntities.Find(e => e.Creature == this.AbilityUser);
+            FightingInfo reciever = this.AbilityUser.battleManager.fightingEntities.Find(e => e.Creature == this.target);
 
             AbilityUser.battleManager.heal(source, reciever, HealAmount);
 

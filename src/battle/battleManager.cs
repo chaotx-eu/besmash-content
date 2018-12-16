@@ -4,25 +4,26 @@ namespace BesmashContent
     using System.Collections.Generic;
     public class BattleManager
     {
-        public List<BattleEntity> fightingEntities;   //Eine Liste in der alle am Kampf teilnehmenden Entities genau einmal enthalten sind
+        public List<FightingInfo> fightingEntities;   //Eine Liste in der alle am Kampf teilnehmenden Entities genau einmal enthalten sind
         public Random random;
+        public TileMap map;
         public BattleManager()
         {
-            fightingEntities = new List<BattleEntity>();
+            fightingEntities = new List<FightingInfo>();
         }
 
-        //Berechnet die Reihenfolge in der die Kämpfenden Entitys agieren dürfen und arbeitet sie der Reihe nach ab
+        //Berechnet die Reihenfolge in der die Kämpfenden Creatures agieren dürfen und arbeitet sie der Reihe nach ab
         public void ManageRound()
         {
             //Der Anfang der Runde
             for(int i = 0; i < fightingEntities.Count; i++)  
             {
-                BattleEntity battleEntity = fightingEntities[i];
+                FightingInfo FightingInfo = fightingEntities[i];
 
-                if (battleEntity.entity.status.poisoned)    //Arbeitet den Schaden durch gift ab
-                    battleEntity.entity.isDealtDamage(12);
+                if (FightingInfo.Creature.status.poisoned)    //Arbeitet den Schaden durch gift ab
+                    FightingInfo.Creature.isDealtDamage(12);
                 
-                foreach(Buff b in battleEntity.battleBuffs) //prüft ob buffs/debuffs ablaufen
+                foreach(Buff b in FightingInfo.battleBuffs) //prüft ob buffs/debuffs ablaufen
                 {
                     if (!b.Over)
                         b.updateRound();
@@ -30,49 +31,49 @@ namespace BesmashContent
             }
 
             //Die einzelnen Aktionen der Kämpfer
-            List<BattleEntity> fightingOrder = calculateFightingOrder(); //Berechnet die Reihenfolge in der die Entities
+            List<FightingInfo> fightingOrder = calculateFightingOrder(); //Berechnet die Reihenfolge in der die Entities
             for(int i = 0; i < fightingOrder.Count; i++)
             {
-                if(!fightingOrder[i].entity.status.dead)
+                if(!fightingOrder[i].Creature.status.dead)
                     ManageTurn(fightingOrder[i]);
             }
 
             //Das Ende der Runde
         }
 
-        public void ManageTurn(BattleEntity battleEntity) //Ein einzelner Zug
+        public void ManageTurn(FightingInfo FightingInfo) //Ein einzelner Zug
         {
-            foreach(Buff b in battleEntity.battleBuffs) //prüft ob buffs/debuffs ablaufen
+            foreach(Buff b in FightingInfo.battleBuffs) //prüft ob buffs/debuffs ablaufen
             {
                 if (!b.Over)
                     b.updateTurn();
             }
             
-            if(battleEntity.entity.status.stunned)
+            if(FightingInfo.Creature.status.stunned)
             {
-                battleEntity.entity.status.stunned = false;
+                FightingInfo.Creature.status.stunned = false;
             }
-            else if (battleEntity.entity.status.asleep)
+            else if (FightingInfo.Creature.status.asleep)
             {
-                battleEntity.entity.status.roundsAsleep++;
-                if (random.Next(100) <= 10 * battleEntity.entity.status.roundsAsleep)
+                FightingInfo.Creature.status.roundsAsleep++;
+                if (random.Next(100) <= 10 * FightingInfo.Creature.status.roundsAsleep)
                 {
-                    battleEntity.entity.status.asleep = false;
-                    battleEntity.entity.status.roundsAsleep = 0;
+                    FightingInfo.Creature.status.asleep = false;
+                    FightingInfo.Creature.status.roundsAsleep = 0;
                 }
             }
             else
-                battleEntity.entity.nextTurn();
+                FightingInfo.Creature.nextTurn();
         }
 
-        public void addToBattle(Entity entity)
+        public void addToBattle(Creature Creature, FightingInfo.Faction alignment)
         {
-            BattleEntity battleEntity = new BattleEntity(entity);     //Erstellt eine BattleEntity, die auf die angegebene Entity verweist
+            FightingInfo FightingInfo = new FightingInfo(Creature, alignment);     //Erstellt eine FightingInfo, die auf die angegebene Creature verweist
 
-            fightingEntities.Add(battleEntity);
+            fightingEntities.Add(FightingInfo);
         }
 
-        public void removeFromBattle(Entity entity)
+        public void removeFromBattle(Creature Creature)
         {
             if(fightingEntities.Count > 0)
             {
@@ -80,7 +81,7 @@ namespace BesmashContent
                 bool removed = false;
                 do
                 {
-                    if(fightingEntities[i].entity == entity)
+                    if(fightingEntities[i].Creature == Creature)
                     {
                         fightingEntities.RemoveAt(i);
                         removed = true;
@@ -90,30 +91,30 @@ namespace BesmashContent
             }
         }
 
-        public List<BattleEntity> calculateFightingOrder()
+        public List<FightingInfo> calculateFightingOrder()
         {
             //Rechnet übriggebliebende agilität aus letzter Runde dazu
             for(int i = 0; i < fightingEntities.Count; i++)
             {
-                BattleEntity battleEntity = fightingEntities[i];
-                battleEntity.temporalAgility += battleEntity.stats.AGI;
+                FightingInfo FightingInfo = fightingEntities[i];
+                FightingInfo.temporalAgility += FightingInfo.stats.AGI;
             }
 
             //Die Priorität wird auf 0 gesetzt
             for(int i = 0; i < fightingEntities.Count; i++)
             {
-                BattleEntity entity = fightingEntities[i];
-                entity.priority = 0;
+                FightingInfo Creature = fightingEntities[i];
+                Creature.priority = 0;
             }
 
             //Bestimmt die Priorität
             for(int i = 0; i < fightingEntities.Count; i++)
             {
-                BattleEntity entitiyI = fightingEntities[i];
+                FightingInfo entitiyI = fightingEntities[i];
                 entitiyI.priority = 1;
                 for(int j = 0; j < fightingEntities.Count; j++)
                 {
-                    BattleEntity entitiyJ = fightingEntities[j];
+                    FightingInfo entitiyJ = fightingEntities[j];
 
                     if(i != j)
                     {
@@ -136,17 +137,17 @@ namespace BesmashContent
             //Es wird berechnet wie oft jeder angreifen kann (n mal so oft, wie die eigene AGI höher ist als die des langsamsten)
             for(int i = 0; i < fightingEntities.Count; i++)
             {
-                BattleEntity entity = fightingEntities[i];
-                entity.times = 0;
-                while(entity.temporalAgility >= lowestAgility)
+                FightingInfo Creature = fightingEntities[i];
+                Creature.times = 0;
+                while(Creature.temporalAgility >= lowestAgility)
                 {
-                    entity.temporalAgility -= lowestAgility;
-                    entity.times++;
+                    Creature.temporalAgility -= lowestAgility;
+                    Creature.times++;
                 }
             }
 
             //Eine Liste wird erstellt, die der Reihenfolge in der die Entities nächste Runde agieren dürfen entspricht
-            List<BattleEntity> fightingOrder = new List<BattleEntity>();
+            List<FightingInfo> fightingOrder = new List<FightingInfo>();
             bool wasAdded;
             do
             {
@@ -155,11 +156,11 @@ namespace BesmashContent
                 {
                     for (int j = 0; j < fightingEntities.Count; j++)
                     {
-                        BattleEntity entity = fightingEntities[j];
-                        if(entity.priority == i && entity.times > 0)
+                        FightingInfo Creature = fightingEntities[j];
+                        if(Creature.priority == i && Creature.times > 0)
                         {
-                            fightingOrder.Add(entity);
-                            entity.times--;
+                            fightingOrder.Add(Creature);
+                            Creature.times--;
                             wasAdded = true;
                         }
                     }
@@ -169,7 +170,7 @@ namespace BesmashContent
             return fightingOrder;
         }
 
-        public bool attack(BattleEntity attacker, BattleEntity defender, OffensiveAbility attack)
+        public bool attack(FightingInfo attacker, FightingInfo defender, OffensiveAbility attack)
         {
             bool success = false;   //Rückgabe, ob der Angriff erfolgreich war oder nicht (eventuell nötig für irgendwas)
             float damageMultiplier; //Multiplikator errechnet sich aus den Werten von Angreifer und Verteidiger
@@ -181,17 +182,17 @@ namespace BesmashContent
 
             if(random.Next(100) > dodgeRate * attack.BaseAcc)
                 return false;
-            success = defender.entity.isDealtDamage((int) (damageMultiplier * attack.BaseDamage));
+            success = defender.Creature.isDealtDamage((int) (damageMultiplier * attack.BaseDamage));
             
-            if(defender.entity.status.dead)
-                attacker.entity.onKill();
+            if(defender.Creature.status.dead)
+                attacker.Creature.onKill();
 
             return success;
         }
 
-        public void heal(BattleEntity source, BattleEntity reciever, int amount)
+        public void heal(FightingInfo source, FightingInfo reciever, int amount)
         {
-            reciever.entity.CurrentHP += amount;
+            reciever.Creature.CurrentHP += amount;
         }
     }
 }
