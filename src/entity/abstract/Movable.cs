@@ -191,8 +191,10 @@ namespace BesmashContent {
             if(handler != null) handler(this, args);
 
             // trigger tile stepped event
-            Tile tile = ContainingMap.getTile(args.Target.X, args.Target.Y);
-            tile.onTileStepped(new TileEventArgs(this, ContainingMap, args.Target));
+            if(ContainingMap != null) {
+                Tile tile = ContainingMap.getTile(args.Target.X, args.Target.Y);
+                if(tile != null) tile.onTileStepped(new TileEventArgs(this, ContainingMap, args.Target));
+            }
         }
     }
 }

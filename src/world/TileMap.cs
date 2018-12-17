@@ -11,6 +11,7 @@
     [KnownType(typeof(Player))]
     [KnownType(typeof(NeutralNPC))]
     [KnownType(typeof(ForestMap))]
+    [KnownType(typeof(Dungeon1Map))]
     [DataContract(IsReference = true)]
     public class TileMap {
         /// Alpha value for all maps and its content
@@ -139,8 +140,9 @@
         private int x, y;
 
         /// This method is called after the map is loaded
-        /// with the currently active team as parameter
+        /// with the previous map and active team as parameter
         public virtual void onLoad(TileMap fromMap, Team team) {
+            spawnEntities();
             team.Player.ForEach(player => {
                 if(fromMap != null)
                     fromMap.removeEntity(player);
@@ -149,6 +151,13 @@
             });
 
             Slave = team.Leader;
+            team.resetFormation();
+        }
+
+        /// Override this method to spawn and add
+        /// entities on load
+        protected virtual void spawnEntities() {
+            Entities.Clear();
         }
 
         /// Initializes this map and all its objects.

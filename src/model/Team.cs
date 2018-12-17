@@ -60,7 +60,7 @@ namespace BesmashContent {
         public void addMembers(params Player[] members) {
             members.ToList().ForEach(Members.Add);
             lastSpots.Limit += members.Length;
-            targetSpots = new Point[Members.Count+1];
+            targetSpots = new Point[Player.Count];
             initHandler();
         }
 
@@ -68,7 +68,7 @@ namespace BesmashContent {
         public void removeMember(Player player) {
             if(Members.Remove(player)) {
                 lastSpots.Limit -= 1;
-                targetSpots = new Point[Members.Count+1];
+                targetSpots = new Point[Player.Count];
             }
         }
 
@@ -90,6 +90,16 @@ namespace BesmashContent {
                 if(idleTime >= MaxIdleTime)
                     Members.ForEach(toFormation);
             }
+        }
+
+        /// Stops any movement of players in this team
+        /// and clears the step buffers
+        public void resetFormation() {
+            Player.ForEach(player
+                => player.stop());
+
+            lastSpots.Clear();
+            targetSpots = new Point[Player.Count];
         }
 
         /// Trys to move the member to its associated

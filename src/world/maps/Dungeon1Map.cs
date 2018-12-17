@@ -2,8 +2,8 @@ namespace BesmashContent {
     using Microsoft.Xna.Framework;
     using System.Linq;
 
-    public class ForestMap : TileMap {
-        public ForestMap() : base() {
+    public class Dungeon1Map : TileMap {
+        public Dungeon1Map() : base() {
             // nothing special required here
         }
 
@@ -11,39 +11,18 @@ namespace BesmashContent {
             base.init(game);
 
             // define special tiles (doors, triggers, etc.)
-            Tile cryptDoor = getTile(45, 17);
-            cryptDoor.TileSteppedEvent += (sender, args) => {
+            Tile cryptExit1 = getTile(49, 96);
+            cryptExit1.TileSteppedEvent += (sender, args) => {
                 // define here what should happen when stepped on this tile
                 if(args.Movable == Slave)
-                    loadOther("maps/dungeon1"); // e.g. load another map (map file must exist!)
+                    loadOther("maps/forestMap"); // e.g. load another map (map file must exist!)
             };
         }
 
         public override void onLoad(TileMap fromMap, Team team) {
-            if(fromMap is Dungeon1Map) {
+            if(fromMap is ForestMap) {
                 team.Player.ForEach(player
-                    => player.Position = new Vector2(45, 17));
-            } else if(fromMap == null) { // new game (example)
-                Player[] members = new Player[3];
-                Player leader = new Player("images/entities/grey_sheet");
-
-                string[] memberSheets = {
-                    "images/entities/pink_sheet",
-                    "images/entities/red_sheet",
-                    "images/entities/white_sheet"
-                };
-
-                for(int i = -1; i < members.Length; ++i) {
-                    Player player = i < 0 ? leader : new Player(memberSheets[i]);
-                    player.Position = new Vector2(16, 86+i);
-                    player.StepTime = 250;
-                    if(i >= 0) members[i] = player;
-                };
-
-                team.add(leader, members);
-                team.Formation[members[0]] = new Point(1, 1);
-                team.Formation[members[1]] = new Point(-1, 1);
-                team.Formation[members[2]] = new Point(0, 1);
+                    => player.Position = new Vector2(49, 96));
             }
 
             // always call this last
