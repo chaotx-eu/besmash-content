@@ -9,11 +9,15 @@
     using Microsoft.Xna.Framework.Content;
 
     [KnownType(typeof(Player))]
+    [KnownType(typeof(Cursor))]
     [KnownType(typeof(NeutralNPC))]
     [KnownType(typeof(ForestMap))]
     [KnownType(typeof(Dungeon1Map))]
     [DataContract(IsReference = true)]
     public class TileMap {
+        /// Possible states a map can be in
+        public enum MapState {Roaming, Fighting}
+
         /// Alpha value for all maps and its content
         public static float MapAlpha {get; set;} = 1f;
 
@@ -80,6 +84,11 @@
             }
         }
 
+        /// The state of this map
+        [DataMember]
+        [ContentSerializerIgnore]
+        public MapState State {get; private set;} = MapState.Roaming;
+
         /// Width of this map in tiles. Equal
         /// to the x-coord of any Tile furthest
         /// to the right plus 1.
@@ -120,6 +129,10 @@
         [ContentSerializerIgnore]
         public bool Initialized {get; private set;}
 
+        /// The center of the viewport in fighting state
+        [ContentSerializerIgnore]
+        public Point BattleMapCenter {get; private set;}
+
         /// Map to be loaded on next update. Resets to
         /// null on retreival
         [ContentSerializerIgnore]
@@ -131,6 +144,10 @@
             }
             private set {otherMap = value;}
         }
+
+        // Reference to the Cursor of this Map
+        [ContentSerializerIgnore]
+        public Cursor Cursor {get; private set;} = new Cursor();
 
         private string otherMap = null;
         private Point viewport = new Point(4, 4);
@@ -213,12 +230,21 @@
         }
 
         /// Computes and sets X and Y onscreen-coordinate
-        /// dependent on the Viewport and the Slave position.
+        /// dependent on the Viewport and the Slave position
+        /// in roaming state or the the BattleMapCenter in
+        /// Figthing state
         public void align() {
-            if(Slave != null) {
-                x = Viewport.X*tileWidth - (int)(Slave.Position.X*tileWidth);
-                y = Viewport.Y*tileHeight - (int)(Slave.Position.Y*tileHeight);
+            float dx = 0, dy = 0;
+            if(State == MapState.Roaming && Slave != null) {
+                dx = Slave.Position.X;
+                dy = Slave.Position.Y;
+            } else if(State == MapState.Fighting) {
+                dx = BattleMapCenter.X;
+                dy = BattleMapCenter.Y;
             }
+
+            x = Viewport.X*tileWidth - (int)(dx*tileWidth);
+            y = Viewport.Y*tileHeight - (int)(dy*tileHeight);
         }
 
         /// Loads all for this map required assets
@@ -234,6 +260,8 @@
             } catch(ContentLoadException) {
                 // ignore
             }
+
+            Cursor.load(manager);
         }
 
         /// Aligns the map and updates all game object on it.
@@ -279,6 +307,29 @@
             return Entities.Where(e =>
                 e.Position.X == x &&
                 e.Position.Y == y).ToList();
+        }
+
+        public void setFightingState(Team team) {
+            setFightingState(team, team.Leader.Target);
+        }
+
+        public void setFightingState(Team team, Point center) {
+            Cursor.Position = new Vector2(
+                team.Leader.Target.X,
+                team.Leader.Target.Y);
+
+            BattleMapCenter = center;
+            State = MapState.Fighting;
+            Slave = Cursor;
+            Cursor.stop();
+        }
+
+        public void setRoamingState(Team team) {
+            if(Slave is Cursor)
+                removeEntity(Slave);
+
+            Slave = team.Leader;
+            State = MapState.Roaming;
         }
     }
 }

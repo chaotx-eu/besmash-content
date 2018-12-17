@@ -52,6 +52,10 @@ namespace BesmashContent {
         [DataMember]
         public int SpritesPerStep {get; set;} = 1;
 
+        /// Sprite update rate of this cursor
+        [DataMember]
+        public int SpritesPerSecond {get; set;} = 1;
+
         /// Event handler for handling move events i.e.
         /// will be triggered after this Movable started moving.
         public event MoveStartedHandler MoveStartedEvent;
@@ -117,7 +121,7 @@ namespace BesmashContent {
         
         float stepTimer, idleTimer;
         public override void update(GameTime time) {
-            if(ContainingMap.Slave != this)
+            if(ContainingMap.Slave != this || (ContainingMap.Slave is Cursor))
                 base.update(time);
 
             if(Moving) {
@@ -127,7 +131,7 @@ namespace BesmashContent {
                 idleTimer = 0;
                 stepTimer += et;
 
-                if(stepTimer*SpritesPerStep >= StepTime) {
+                if(stepTimer*SpritesPerStep > StepTime) {
                     updateSprite();
                     stepTimer = 0;
                 }
@@ -162,18 +166,21 @@ namespace BesmashContent {
                 if(!Moving) onMoveFinished(new MoveEventArgs(
                     Position.ToPoint(), Target));
 
-            } else if(idleTimer < 300)
+            } else {
                 idleTimer += time.ElapsedGameTime.Milliseconds;
 
-            if(idleTimer >= 300)
-                updateSprite(true);
+                if(idleTimer > 1000f/SpritesPerSecond) {
+                    updateSprite(true);
+                    idleTimer = 0;
+                }
+            }
         }
 
         private void updateSprite() {
             updateSprite(false);
         }
 
-        private void updateSprite(bool reset) {
+        protected virtual void updateSprite(bool reset) {
             int w = SpriteRectangle.Width;
             int h = SpriteRectangle.Height;
             int y = ((int)Facing)*SpriteRectangle.Height;

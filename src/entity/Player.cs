@@ -21,7 +21,8 @@ namespace BesmashContent {
             SpriteSheet = spriteSheet;
             SpriteRectangle = new Rectangle(0, 0, DEFAULT_SPRITE_W, DEFAULT_SPRITE_H);
             SpriteCount = DEFAULT_SPRITE_C;
-            SpritesPerStep = 2;
+            SpritesPerStep = DEFAULT_SPS;
+            SpritesPerSecond = DEFAULT_SPS;
             Facing = Facing.SOUTH;
         }
     }

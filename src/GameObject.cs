@@ -27,6 +27,16 @@ namespace BesmashContent {
         [ContentSerializerIgnore]
         public Rectangle DestinationRectangle {get; set;}
 
+        /// Color of this GameObject, default Color.White
+        [DataMember]
+        [ContentSerializerIgnore]
+        public Color Color {get; set;} = Color.White;
+
+        /// Drawing layer of this GameObject, default 1f
+        [DataMember]
+        [ContentSerializerIgnore]
+        public float Layer {get; set;} = 1f;
+
         /// Reference to SpriteSheet image
         private Texture2D sheet;
 
@@ -42,8 +52,8 @@ namespace BesmashContent {
                 SpriteRectangle.Height/2f);
                 
             batch.Draw(sheet, rotateRectangle(DestinationRectangle, (int)Rotation),
-                SpriteRectangle, Color.White*TileMap.MapAlpha, Rotation*(float)Math.PI/180f,
-                origin, SpriteEffects.None, 1f);
+                SpriteRectangle, Color*TileMap.MapAlpha, Rotation*(float)Math.PI/180f,
+                origin, SpriteEffects.None, Layer);
         }
         
         /// Updates this object.
