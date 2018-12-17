@@ -37,13 +37,17 @@ namespace BesmashContent
 
         public Stats BaseStats {get; set;}
         public Stats StatsModifier {get; set;}
-        public Ability[] Abilities{get{return Abilities;}set
+        private Ability[] abilities;
+        public Ability[] Abilities{get{return abilities;}set
         {
-            foreach(Ability a in value)
+            if(value != null)
             {
-                a.AbilityUser = this;
+                foreach(Ability a in value)
+                {
+                    a.AbilityUser = this;
+                }
             }
-            Abilities = value;
+            abilities = value;
         }}
         public Status status{get; set;}
 

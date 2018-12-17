@@ -11,7 +11,7 @@ namespace BesmashContent
         public override void useAbility()
         {
             this.determineTarget();
-            target.status.removeStatus(StatusType);
+            Status.removeStatus(target, StatusType);
 
             if(followUpOnFail || followUpOnSuccess)
                 FollowUpAbility.useAbility();

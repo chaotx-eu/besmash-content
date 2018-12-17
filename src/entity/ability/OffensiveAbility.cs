@@ -72,7 +72,7 @@ namespace BesmashContent
                 foreach (PossibleStatus s in potentialStatus)   //Bei einem Erfolg werden Statuseffekte applied
                 {
                     if (s.chance >= Creature.BattleManager.random.Next(100))
-                        defender.Creature.status.addStatus(s.type);
+                        Status.addStatus(defender.Creature, s.type);
                 }
 
                 if(followUpOnSuccess)     //Bei einem Erfolg wird die Followup Ability gestartet
