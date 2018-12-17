@@ -10,6 +10,7 @@
 
     [KnownType(typeof(Player))]
     [KnownType(typeof(NeutralNPC))]
+    [KnownType(typeof(ForestMap))]
     [DataContract(IsReference = true)]
     public class TileMap {
         /// Alpha value for all maps and its content
@@ -114,6 +115,19 @@
         [ContentSerializerIgnore]
         public Song BackgroundMusic {get; set;} // TODO
 
+        /// Map to be loaded on next update. Resets to
+        /// null on retreival
+        [ContentSerializerIgnore]
+        public string OtherMap {
+            get {
+                string value = otherMap;
+                otherMap = null;
+                return value;
+            }
+            private set {otherMap = value;}
+        }
+
+        private string otherMap = null;
         private Point viewport = new Point(4, 4);
         private List<Entity> entities;
         private Tile[][] tileArray;
@@ -124,9 +138,21 @@
         private int width, height;
         private int x, y;
 
+        /// This method is called after the map is loaded
+        /// with the currently active team as parameter
+        public virtual void onLoad(TileMap fromMap, Team team) {
+            team.Player.ForEach(player => {
+                if(fromMap != null)
+                    fromMap.removeEntity(player);
+                    
+                addEntity(player);
+            });
+
+            Slave = team.Leader;
+        }
 
         /// Initializes this map and all its objects.
-        public void init(Game game) {
+        public virtual void init(Game game) {
             this.game = game;
             if(Tiles.Count > 0) {
                 width = Tiles.Max(t => (int)t.Position.X) + 1;
@@ -145,6 +171,11 @@
             initTileSize();
             initSlave();
             Tiles.ForEach(t => t.ContainingMap = this);
+        }
+
+        /// Defines another map to be loaded on next update
+        public void loadOther(string mapFile) {
+            OtherMap = mapFile;
         }
 
         /// Computes and sets the size in pixels of Tiles on

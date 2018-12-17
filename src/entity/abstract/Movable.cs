@@ -189,6 +189,10 @@ namespace BesmashContent {
         protected virtual void onMoveFinished(MoveEventArgs args) {
             MoveFinishedHandler handler = MoveFinishedEvent;
             if(handler != null) handler(this, args);
+
+            // trigger tile stepped event
+            Tile tile = ContainingMap.getTile(args.Target.X, args.Target.Y);
+            tile.onTileStepped(new TileEventArgs(this, ContainingMap, args.Target));
         }
     }
 }
