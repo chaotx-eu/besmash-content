@@ -17,7 +17,7 @@ namespace BesmashContent
         public override void useAbility()
         {
             this.determineTarget();
-            FightingInfo reciever = this.AbilityUser.battleManager.fightingEntities.Find(e => e.Creature == this.target);
+            FightingInfo reciever = Creature.BattleManager.fightingEntities.Find(e => e.Creature == this.target);
             reciever.battleBuffs.Add(new Buff(reciever, BuffType, roundDuration, turnDuration, BuffStrength));
 
             if(followUpOnFail || followUpOnSuccess)

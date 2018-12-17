@@ -21,7 +21,23 @@ namespace BesmashContent
             public List<HealAbility> heal{get;set;}
             
             public List<Ability> usedAbilities{get;set;}
+            
+            /// default width in pixels of a single sprite
+            /// in a creature spritesheet
+            public static int DEFAULT_SPRITE_W {get;} = 16;
 
+            /// default height in pixels of a single sprite
+            /// in a creature spritesheet
+            public static int DEFAULT_SPRITE_H {get;} = 16;
+
+            /// default sprite count on horizontal pane
+            public static int DEFAULT_SPRITE_C {get;} = 4;
+
+            /// default amount of sprites shown per step
+
+
+            public static int DEFAULT_SPS {get;} = 2;
+            
             public AIParameters(FightingStyle style, Ability mainAttack, Ability startingAttack, int aggression, Ability[] abilities)
             {
                 this.style = style;
@@ -75,8 +91,10 @@ namespace BesmashContent
 
         public AIParameters AI{get;set;}
 
-
-        public NPC(BattleManager manager, Stats stats, Ability[] abilities, FightingStyle style) : base(manager, stats, abilities)
+        public NPC()
+        {
+        }
+        public NPC(Stats stats, Ability[] abilities, FightingStyle style) : base(stats, abilities)
         {
             AI = new AIParameters(style, null, null, 5, abilities);
         }
@@ -86,12 +104,12 @@ namespace BesmashContent
             switch (AI.style)
             {
                 case FightingStyle.Meelee : 
-                    if(MapUtils.ManhattenDistance(this.Position, MapUtils.NearestEnemy(this, battleManager.map).Position) == 1)
+                    if(MapUtils.ManhattenDistance(this.Position, MapUtils.NearestEnemy(this, BattleManager.map).Position) == 1)
                     {
                         List<FightingInfo> possibleTargets = new List<FightingInfo>();
-                        foreach(FightingInfo info in battleManager.fightingEntities)
+                        foreach(FightingInfo info in BattleManager.fightingEntities)
                         {
-                            if(MapUtils.ManhattenDistance(this.Position, info.Creature.Position) == 1 && !FightingInfo.IsFriendlyTo(battleManager.fightingEntities.Find(x => x.Creature == this), info))
+                            if(MapUtils.ManhattenDistance(this.Position, info.Creature.Position) == 1 && !FightingInfo.IsFriendlyTo(BattleManager.fightingEntities.Find(x => x.Creature == this), info))
                                 possibleTargets.Add(info);
                         }
                         if(AI.heal.Count > 0)
@@ -132,7 +150,7 @@ namespace BesmashContent
                                     while (toUse == null)
                                     {
                                         //Zufällig nen move wählen
-                                        int i = battleManager.random.Next(AI.meelee.Count);
+                                        int i = BattleManager.random.Next(AI.meelee.Count);
                                         if(AI.meelee[i].AbilityCost <= CurrentAP)
                                             toUse = AI.meelee[i];
                                     }  
@@ -147,7 +165,7 @@ namespace BesmashContent
                                     else
                                     {
                                         //Zufälliges Ziel wählen
-                                        int i = battleManager.random.Next(AI.meelee.Count);
+                                        int i = BattleManager.random.Next(AI.meelee.Count);
                                         ((OffensiveAbility)toUse).target = possibleTargets[i].Creature;
                                     }
                                 }
@@ -164,9 +182,9 @@ namespace BesmashContent
                                 else
                                 {
                                     //zu wem will ich gehen?
-                                    foreach(FightingInfo info in battleManager.fightingEntities)
+                                    foreach(FightingInfo info in BattleManager.fightingEntities)
                                     {
-                                        if(!FightingInfo.IsFriendlyTo(battleManager.fightingEntities.Find(x => x.Creature == this), info))
+                                        if(!FightingInfo.IsFriendlyTo(BattleManager.fightingEntities.Find(x => x.Creature == this), info))
                                         {
                                             possibleTargets.Add(info);
                                         }
@@ -185,7 +203,7 @@ namespace BesmashContent
                                                 case 2 : nextSpace.X--; break;
                                                 case 3 : nextSpace.X++; break;
                                             }
-                                            if(MapUtils.isSpaceFree(new Point((int)nextSpace.X, (int)nextSpace.Y), battleManager.map))
+                                            if(MapUtils.isSpaceFree(new Point((int)nextSpace.X, (int)nextSpace.Y), BattleManager.map))
                                                 possibleSpaces.Add(nextSpace);
                                         }
                                     }
@@ -193,7 +211,7 @@ namespace BesmashContent
                                     Vector2 target = new Vector2(0.0f, 0.0f);
                                     foreach(Vector2 space in possibleSpaces)
                                     {
-                                        Point[] path = MapUtils.shortestPath(this.Position, space, battleManager.fightingEntities.Find(x => x.Creature == this).stats.AGI, battleManager.map);
+                                        Point[] path = MapUtils.shortestPath(this.Position, space, BattleManager.fightingEntities.Find(x => x.Creature == this).stats.AGI, BattleManager.map);
 
                                         if(path.Length < min)
                                         {

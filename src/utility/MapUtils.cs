@@ -195,8 +195,8 @@ namespace BesmashContent.Utility {
                 (
                     x => FightingInfo.IsFriendlyTo
                     (
-                        mover.battleManager.fightingEntities.Find(y => y.Creature == x),
-                        mover.battleManager.fightingEntities.Find(y => y.Creature == mover)
+                        Creature.BattleManager.fightingEntities.Find(y => y.Creature == x),
+                        Creature.BattleManager.fightingEntities.Find(y => y.Creature == mover)
                     )
                 ))
                 {
@@ -216,7 +216,7 @@ namespace BesmashContent.Utility {
             {
                 if (e is Creature)
                 {
-                    if (!FightingInfo.IsFriendlyTo(current.battleManager.fightingEntities.Find(x => x.Creature == current), current.battleManager.fightingEntities.Find(x => x.Creature == e)))
+                    if (!FightingInfo.IsFriendlyTo(Creature.BattleManager.fightingEntities.Find(x => x.Creature == current), Creature.BattleManager.fightingEntities.Find(x => x.Creature == e)))
                     {
                         enemies.Add((Creature)e);
                     }

@@ -4,14 +4,21 @@ namespace BesmashContent
     using System.Collections.Generic;
     public class BattleManager
     {
+        private static BattleManager instance = null;
         public List<FightingInfo> fightingEntities;   //Eine Liste in der alle am Kampf teilnehmenden Entities genau einmal enthalten sind
         public Random random;
         public TileMap map;
-        public BattleManager(TileMap tileMap)
+        public static BattleManager newInstance()
+        {
+            if(instance == null)
+                instance = new BattleManager();
+            return instance;
+        }
+
+        private BattleManager()
         {
             fightingEntities = new List<FightingInfo>();
             random = new Random();
-            map = tileMap;
         }
 
         //Berechnet die Reihenfolge in der die Kämpfenden Creatures agieren dürfen und arbeitet sie der Reihe nach ab

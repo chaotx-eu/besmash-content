@@ -12,10 +12,10 @@ namespace BesmashContent
         public override void useAbility()
         {
             this.determineTarget();
-            FightingInfo source = this.AbilityUser.battleManager.fightingEntities.Find(e => e.Creature == this.AbilityUser);
-            FightingInfo reciever = this.AbilityUser.battleManager.fightingEntities.Find(e => e.Creature == this.target);
+            FightingInfo source = Creature.BattleManager.fightingEntities.Find(e => e.Creature == this.AbilityUser);
+            FightingInfo reciever = Creature.BattleManager.fightingEntities.Find(e => e.Creature == this.target);
 
-            AbilityUser.battleManager.heal(source, reciever, HealAmount);
+            Creature.BattleManager.heal(source, reciever, HealAmount);
 
             if(followUpOnFail || followUpOnSuccess)
                 FollowUpAbility.useAbility();

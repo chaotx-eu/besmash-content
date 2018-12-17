@@ -37,15 +37,20 @@ namespace BesmashContent
 
         public Stats BaseStats {get; set;}
         public Stats StatsModifier {get; set;}
-        public Ability[] Abilities{get; set;}
+        public Ability[] Abilities{get{return Abilities;}set
+        {
+            foreach(Ability a in value)
+            {
+                a.AbilityUser = this;
+            }
+            Abilities = value;
+        }}
         public Status status{get; set;}
 
-        public BattleManager battleManager{get; set;} //Wird übergeben damit die Creatures nen überblick über das Schlachtfeld haben
+        public static BattleManager BattleManager = BattleManager.newInstance();
 
-        public Creature() : this(null) {} // vermeidet doppelten code
-        public Creature(BattleManager manager)
+        public Creature()
         {
-            battleManager = manager;
 
             // duerfen nicht null sein sonst krachts z.B. bei
             // MaxHP.get oder CurrentHP.set. Wenn entities aus
@@ -56,9 +61,8 @@ namespace BesmashContent
             StatsModifier = new Stats();
             status = new Status(); // sicherheitshalber
         }
-        public Creature(BattleManager manager, Stats stats, Ability[] abilities)
+        public Creature(Stats stats, Ability[] abilities)
         {
-            battleManager = manager;
             MaxAP = 100;
             BaseStats = stats;
             Abilities = abilities;
@@ -91,7 +95,7 @@ namespace BesmashContent
              */
             if(this.status.asleep)
             {
-                if (battleManager.random.Next(100) <= (10 * status.roundsAsleep) + 35)
+                if (BattleManager.random.Next(100) <= (10 * status.roundsAsleep) + 35)
                 {
                     status.asleep = false;
                     status.roundsAsleep = 0;
@@ -109,7 +113,7 @@ namespace BesmashContent
 
         public virtual void onDeath() //Creature ist gestorben
         {
-            battleManager.removeFromBattle(this);
+            BattleManager.removeFromBattle(this);
         }
     }
 }

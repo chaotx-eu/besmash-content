@@ -14,12 +14,13 @@ namespace BesmashContent
         public MovementAbility(Creature user, int cost, string name, Point[] path, Movable target) : base(user, cost, name)
         {
             this.path = path;
+            this.type = Type.move;
         }
         public MovementAbility(Creature user, int cost, string name, Point destination, Movable target) : base(user, cost, name)
         {
-            maxDistance = AbilityUser.battleManager.fightingEntities.Find(x => x.Creature == AbilityUser).stats.AGI;
+            maxDistance = Creature.BattleManager.fightingEntities.Find(x => x.Creature == AbilityUser).stats.AGI;
             this.path = determineShortestPath(new Point((int)target.Position.X, (int)target.Position.Y), destination);
-
+            this.type = Type.move;
         }
         public override void useAbility()
         {
@@ -31,9 +32,9 @@ namespace BesmashContent
 
         public Point[] determineShortestPath(Point start, Point destination)
         {
-            if (MovementAbility.isPathPossible(start, destination, maxDistance, AbilityUser.battleManager.map))
+            if (MovementAbility.isPathPossible(start, destination, maxDistance, Creature.BattleManager.map))
             {
-                return MapUtils.shortestPath(start, destination, maxDistance, AbilityUser.battleManager.map);
+                return MapUtils.shortestPath(start, destination, maxDistance, Creature.BattleManager.map);
             }
             else 
                 return new Point[0];
