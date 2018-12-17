@@ -116,6 +116,10 @@
         [ContentSerializerIgnore]
         public Song BackgroundMusic {get; set;} // TODO
 
+        /// Wether this map has already been initialized
+        [ContentSerializerIgnore]
+        public bool Initialized {get; private set;}
+
         /// Map to be loaded on next update. Resets to
         /// null on retreival
         [ContentSerializerIgnore]
@@ -180,6 +184,7 @@
             initTileSize();
             initSlave();
             Tiles.ForEach(t => t.ContainingMap = this);
+            Initialized = true;
         }
 
         /// Defines another map to be loaded on next update
