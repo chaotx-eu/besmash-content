@@ -160,6 +160,10 @@
         private int width, height;
         private int x, y;
 
+        public TileMap() {
+            Cursor.ContainingMap = this;
+        }
+
         /// This method is called after the map is loaded
         /// with the previous map and active team as parameter
         public virtual void onLoad(TileMap fromMap, Team team) {
