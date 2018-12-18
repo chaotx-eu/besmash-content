@@ -1,5 +1,6 @@
 namespace BesmashContent {
     using Microsoft.Xna.Framework;
+    using System.Collections.Generic;
     using System.Linq;
 
     public class Dungeon1Map : TileMap {
@@ -12,10 +13,16 @@ namespace BesmashContent {
 
             // define special tiles (doors, triggers, etc.)
             Tile cryptExit1 = getTile(49, 96);
+            Tile stairsDown = getTile(75, 8);
             cryptExit1.TileSteppedEvent += (sender, args) => {
                 // define here what should happen when stepped on this tile
                 if(args.Movable == Slave)
                     loadOther("maps/forestMap"); // e.g. load another map (map file must exist!)
+            };
+            stairsDown.TileSteppedEvent += (sender, args) => {
+                // define here what should happen when stepped on this tile
+                if(args.Movable == Slave)
+                    loadOther("maps/dungeon2"); // e.g. load another map (map file must exist!)
             };
         }
 
@@ -24,7 +31,10 @@ namespace BesmashContent {
                 team.Player.ForEach(player
                     => player.Position = new Vector2(49, 96));
             }
-
+            else if(fromMap is Dungeon2Map) {
+                team.Player.ForEach(player
+                    => player.Position = new Vector2(75, 8));
+            }
             // always call this last
             base.onLoad(fromMap, team);
         }
@@ -33,8 +43,6 @@ namespace BesmashContent {
         /// entities on load
         protected override void spawnEntities() {
             base.spawnEntities(); // clears entity list by default
-
-            // some example npcs
             Entity donald = new NeutralNPC();
             Entity dagobert = new NeutralNPC();
             donald.SpriteSheet = "images/entities/kevin_sheet";
@@ -50,6 +58,9 @@ namespace BesmashContent {
 
             addEntity(donald);
             addEntity(dagobert);
+            // some example npcs
+            
         }
+
     }
 }
