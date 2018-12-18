@@ -102,16 +102,16 @@ namespace BesmashContent {
                         if((newDistance = resolve(distanceX, distanceY, e)) != null) break;
                 }
 
-                if(newDistance != null) {
-                    move(newDistance.Value.X, newDistance.Value.Y, resolve);
-                    return;
-                }
-
                 Facing = distanceY > 0 ? Facing.SOUTH
                     : distanceY < 0 ? Facing.NORTH
                     : distanceX > 0 ? Facing.EAST
                     : distanceX < 0 ? Facing.WEST
                     : Facing;
+
+                if(newDistance != null) {
+                    move(newDistance.Value.X, newDistance.Value.Y, resolve);
+                    return;
+                }
                     
                 Moving = true;
                 onMoveStarted(new MoveEventArgs(
