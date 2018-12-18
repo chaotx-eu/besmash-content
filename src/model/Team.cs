@@ -30,14 +30,46 @@ namespace BesmashContent {
         /// List of spots targeted by players in this team
         private Point[] targetSpots;
 
+        /// All players in this team
+        public List<Player> Player {get {
+            List<Player> list = new List<Player>(Members);
+            if(Leader != null) list.Add(Leader);
+            return list;
+        }}
+
+        /// Creates a new empty team
+        public Team() : this(null) {}
+
         /// Creates a new team
         public Team(Player leader, params Player[] members) {
-            Leader = leader;
-            Members = new List<Player>(members);
             Formation = new Dictionary<Player, Point>();
-            lastSpots = new FixedList<Point>(members.Length);
-            targetSpots = new Point[members.Length+1];
+            lastSpots = new FixedList<Point>();
+            Members = new List<Player>();
+            if(leader != null) add(leader, members);
+        }
+
+        /// Adds leader and members to the team and
+        /// initializes required event handler
+        public void add(Player leader, params Player[] members) {
+            Leader = leader;
+            addMembers(members);
+        }
+
+        /// Adds members to the team and initializes
+        /// required event handler
+        public void addMembers(params Player[] members) {
+            members.ToList().ForEach(Members.Add);
+            lastSpots.Limit += members.Length;
+            targetSpots = new Point[Player.Count];
             initHandler();
+        }
+
+        /// Removes a member from the team
+        public void removeMember(Player player) {
+            if(Members.Remove(player)) {
+                lastSpots.Limit -= 1;
+                targetSpots = new Point[Player.Count];
+            }
         }
 
         /// The time in milliseconds needed for the
@@ -58,6 +90,16 @@ namespace BesmashContent {
                 if(idleTime >= MaxIdleTime)
                     Members.ForEach(toFormation);
             }
+        }
+
+        /// Stops any movement of players in this team
+        /// and clears the step buffers
+        public void resetFormation() {
+            Player.ForEach(player
+                => player.stop());
+
+            lastSpots.Clear();
+            targetSpots = new Point[Player.Count];
         }
 
         /// Trys to move the member to its associated
