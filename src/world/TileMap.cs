@@ -20,8 +20,8 @@
     [KnownType(typeof(BuffAbility))]
     [KnownType(typeof(Cursor))]
     [KnownType(typeof(NeutralNPC))]
-//    [KnownType(typeof(ForestMap))]
-//    [KnownType(typeof(Dungeon1Map))]
+    [KnownType(typeof(ForestMap))]
+    [KnownType(typeof(Dungeon1Map))]
     [DataContract(IsReference = true)]
     public class TileMap {
         /// Possible states a map can be in
