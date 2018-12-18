@@ -21,6 +21,8 @@ namespace BesmashContent
         public int Frames{get;set;}
         private int currentFrame = 0;
         public bool running{get;set;}
+
+        public EffectAnimation() {} // TODO quick hotfix for content serializer
         public EffectAnimation(string sheet, Rectangle rectangle, int frames, Vector2 position)
         {
             this.SpriteSheet = sheet;
@@ -32,17 +34,26 @@ namespace BesmashContent
         }
         public EffectAnimation(EffectParameters param, Vector2 position) : this(param.Sprite, param.Rectangle, param.Frames, position){}
         
+        private int fps = 4;
+        private int timer;
         public override void update(Microsoft.Xna.Framework.GameTime time)
         {
-            this.updateSprite();
-            if(running)
-            {
-                currentFrame++;
-                if(currentFrame > Frames)
-                    effectManager.removeEffect(this);
-            }
             base.update(time);
+            timer += time.ElapsedGameTime.Milliseconds;
+
+            if(timer > 1000f/fps) {
+                this.updateSprite();
+                if(running)
+                {
+                    currentFrame++;
+                    if(currentFrame > Frames)
+                        effectManager.removeEffect(this);
+                }
+
+                timer = 0;
+            }
         }
+
         protected virtual void updateSprite()
         {
             int w = SpriteRectangle.Width;

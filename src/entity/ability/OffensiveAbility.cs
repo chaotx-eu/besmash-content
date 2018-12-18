@@ -24,8 +24,9 @@ namespace BesmashContent
         
         [ContentSerializer(Optional = true)]
         public PossibleStatus[] potentialStatus{get;set;}   //werden bei einem Treffer Statuseffekte aufs Target gelegt
-        [ContentSerializer(Optional = true)]
-        public Creature target{get{return target;} set{if(isInRange(value)) target = value;}} //Wer soll das Ziel der Attacke sein? (Nur möglich, wennd as Ziel in Reichweite ist)
+
+        private Creature priv_target;
+        public Creature target{get{return priv_target;} set{if(isInRange(value)) priv_target = value;}} //Wer soll das Ziel der Attacke sein? (Nur möglich, wennd as Ziel in Reichweite ist)
 
         public OffensiveAbility()
         {

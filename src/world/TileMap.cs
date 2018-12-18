@@ -9,7 +9,15 @@
     using Microsoft.Xna.Framework.Content;
 
     [KnownType(typeof(Player))]
+    [KnownType(typeof(Enemy))]
     [KnownType(typeof(NeutralNPC))]
+    [KnownType(typeof(EffectAnimation))]
+    [KnownType(typeof(OffensiveAbility))]
+    [KnownType(typeof(DeffensiveAbility))]
+    [KnownType(typeof(MovementAbility))]
+    [KnownType(typeof(HealAbility))]
+    [KnownType(typeof(CureAbility))]
+    [KnownType(typeof(BuffAbility))]
     [DataContract(IsReference = true)]
     public class TileMap {
         /// Alpha value for all maps and its content
@@ -195,7 +203,8 @@
         public void update(GameTime time) {
             align();
             foreach(Tile tile in Tiles) tile.update(time);
-            foreach(Entity entity in Entities) entity.update(time);
+            for(int i = Entities.Count-1; i >= 0; --i) Entities[i].update(time);
+            // foreach(Entity entity in Entities) entity.update(time);
         }
 
         /// Draws all game objects on this map.

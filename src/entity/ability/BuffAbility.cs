@@ -6,6 +6,8 @@ namespace BesmashContent
         public int roundDuration{get;set;}  //-1 for permanent
         public int turnDuration{get;set;}   //-1 to only count rounds
         public int BuffStrength{get;set;}   //multiple of 25% bonus
+
+        public BuffAbility() {} // TODO quick fix for content serializer
         public BuffAbility(Creature user, int cost, string name, int range, Buff.Type type, int rounds, int turns, int strength) : base(user, cost, name, range)
         {
             BuffType = type;
