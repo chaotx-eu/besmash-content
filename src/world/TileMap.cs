@@ -203,7 +203,8 @@
         public void update(GameTime time) {
             align();
             foreach(Tile tile in Tiles) tile.update(time);
-            foreach(Entity entity in Entities) entity.update(time);
+            for(int i = Entities.Count-1; i >= 0; --i) Entities[i].update(time);
+            // foreach(Entity entity in Entities) entity.update(time);
         }
 
         /// Draws all game objects on this map.

@@ -34,7 +34,7 @@ namespace BesmashContent
         }
         public EffectAnimation(EffectParameters param, Vector2 position) : this(param.Sprite, param.Rectangle, param.Frames, position){}
         
-        private int fps = 1;
+        private int fps = 4;
         private int timer;
         public override void update(Microsoft.Xna.Framework.GameTime time)
         {
