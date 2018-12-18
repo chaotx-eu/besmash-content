@@ -2,12 +2,22 @@ namespace BesmashContent
 {
     using BesmashContent.Utility;
     using Microsoft.Xna.Framework;
+    
+    using Microsoft.Xna.Framework.Content;
     using System.Collections.Generic;
     public class MovementAbility : Ability
     {
+        
+        [ContentSerializer(Optional = true)]
         public Point[] path{get;set;}
+        
+        [ContentSerializer(Optional = true)]
         public Point destination{get;set;}
+        
+        [ContentSerializer(Optional = true)]
         public Movable target{get;set;} //Die sich zu bewegende kreatur
+        
+        [ContentSerializer(Optional = true)]
         public int maxDistance{get;set;}
     //  public CollisionResolver resolver{get;set;}
 

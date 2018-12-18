@@ -1,6 +1,6 @@
 namespace BesmashContent {
     using System;
-
+    using Microsoft.Xna.Framework.Content;
     public class Stats {
         public static float MIN_MOD {get;} = 0.25f;
 
@@ -12,6 +12,7 @@ namespace BesmashContent {
         public int BaseDEF{get; set;}
         public int BaseMGD{get; set;}
         public int BaseAGI{get; set;}
+        [ContentSerializerIgnore]
         public int BaseTotal{get{return BaseVIT + BaseATK + BaseMGA + BaseDEF + BaseMGD + BaseAGI;}} //Summe der Basiswerte
         //Additional Stats
         public float BaseACC{get; set;}

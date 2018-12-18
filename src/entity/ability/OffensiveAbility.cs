@@ -1,5 +1,6 @@
 namespace BesmashContent
 {
+    using Microsoft.Xna.Framework.Content;
     public class OffensiveAbility : Ability
     {
         public int BaseDamage{get;set;} //Der standard schaden der Fähigkeit. Angriff und Verteidigung werden später hinzu gerechnet
@@ -17,8 +18,13 @@ namespace BesmashContent
             public Buff.Type type; public int rounds; public int turns; public int strength; public int chance /* 1-100 */;
             public PossibleBuff(Buff.Type type, int rounds, int turns, int strength, int chance){this.type = type; this.rounds = rounds; this.turns = turns; this.strength = strength; this.chance = chance;}
         };
+        
+        [ContentSerializer(Optional = true)]
         public PossibleBuff[] potentialBuffs{get;set;}  //Werden bei einem Treffer BUffs oder Debuffs aufs target gelegt.
+        
+        [ContentSerializer(Optional = true)]
         public PossibleStatus[] potentialStatus{get;set;}   //werden bei einem Treffer Statuseffekte aufs Target gelegt
+        [ContentSerializer(Optional = true)]
         public Creature target{get{return target;} set{if(isInRange(value)) target = value;}} //Wer soll das Ziel der Attacke sein? (Nur möglich, wennd as Ziel in Reichweite ist)
 
         public OffensiveAbility()

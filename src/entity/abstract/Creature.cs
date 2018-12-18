@@ -1,5 +1,8 @@
 namespace BesmashContent
 {
+    using System.Runtime.Serialization;
+    using Microsoft.Xna.Framework;
+    using Microsoft.Xna.Framework.Content;
     public abstract class Creature : Movable
     {
         /// Creatures may wear armor...
@@ -9,10 +12,11 @@ namespace BesmashContent
 
         /// ...and hold a weapon
         public Weapon Weapon {get; set;}
-
+        [ContentSerializerIgnore]
         public int MaxHP {get{return (BaseStats.VIT + StatsModifier.VIT) * 5;}}
-
+        
         private int currentHP;
+        [ContentSerializer(Optional=true)]
         public int CurrentHP {
             get {return currentHP;} 
             set {
@@ -23,10 +27,12 @@ namespace BesmashContent
                     currentHP = MaxHP;
             }
         }
-
+        
+        [ContentSerializer(Optional=true)]
         public int MaxAP{get;set;}
 
         private int currentAP;
+        [ContentSerializer(Optional=true)]
         public int CurrentAP {
             get {return currentAP;}
             set {
@@ -36,6 +42,8 @@ namespace BesmashContent
         }
 
         public Stats BaseStats {get; set;}
+        
+        [ContentSerializer(Optional=true)]
         public Stats StatsModifier {get; set;}
         private Ability[] abilities;
         public Ability[] Abilities{get{return abilities;}set
@@ -49,6 +57,7 @@ namespace BesmashContent
             }
             abilities = value;
         }}
+        [ContentSerializer(Optional=true)]
         public Status status{get; set;}
 
         public static BattleManager BattleManager = BattleManager.newInstance();
