@@ -95,9 +95,6 @@ namespace BesmashContent {
         /// Stops any movement of players in this team
         /// and clears the step buffers
         public void resetFormation() {
-            Player.ForEach(player
-                => player.stop());
-
             lastSpots.Clear();
             targetSpots = new Point[Player.Count];
         }

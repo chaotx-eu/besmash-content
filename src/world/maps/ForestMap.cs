@@ -11,7 +11,7 @@ namespace BesmashContent {
             base.init(game);
 
             // define special tiles (doors, triggers, etc.)
-            Tile cryptDoor = getTile(45, 17);
+            Tile cryptDoor = getTile(45, 16);
             cryptDoor.TileSteppedEvent += (sender, args) => {
                 // define here what should happen when stepped on this tile
                 if(args.Movable == Slave)
@@ -22,7 +22,7 @@ namespace BesmashContent {
         public override void onLoad(TileMap fromMap, Team team) {
             if(fromMap is Dungeon1Map) {
                 team.Player.ForEach(player
-                    => player.Position = new Vector2(45, 17));
+                    => player.Position = new Vector2(45, 16));
             } else if(fromMap == null) { // new game (example)
                 Player[] members = new Player[3];
                 Player leader = new Player("images/entities/grey_sheet");

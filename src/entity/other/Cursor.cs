@@ -1,5 +1,6 @@
 namespace BesmashContent {
     using Microsoft.Xna.Framework;
+    using System.Collections.Generic;
     using System;
 
     public class Cursor : Movable {
@@ -32,6 +33,26 @@ namespace BesmashContent {
             SpritesPerSecond = DEFAULT_SPS;
             SpritesPerStep = SpritesPerSecond/2;
             StepTime = 200;
+        }
+
+        /// Returns the first map object found below the cursor
+        public MapObject getObject() {
+            if(ContainingMap == null) return null;
+
+            int x = (int)Position.X;
+            int y = (int)Position.Y;
+            List<Entity> entities = ContainingMap.getEntities(x, y);
+
+            if(entities.Count > 1)
+                return entities.Find(e => e != this);
+
+            return ContainingMap.getTile(x, y);
+        }
+
+        /// Returns a list of entities below the cursor
+        public List<Entity> getEntities() {
+            return ContainingMap == null ? new List<Entity>()
+                : ContainingMap.getEntities((int)Position.X, (int)Position.Y);
         }
 
         public override void move(int distanceX, int distanceY, CollisionResolver resolve) {
