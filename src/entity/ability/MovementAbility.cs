@@ -11,6 +11,7 @@ namespace BesmashContent
         public int maxDistance{get;set;}
     //  public CollisionResolver resolver{get;set;}
 
+        public MovementAbility() {} // TODO quick hotfix for content serializer
         public MovementAbility(Creature user, int cost, string name, Point[] path, Movable target) : base(user, cost, name)
         {
             this.path = path;

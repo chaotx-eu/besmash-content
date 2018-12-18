@@ -19,7 +19,9 @@ namespace BesmashContent
         };
         public PossibleBuff[] potentialBuffs{get;set;}  //Werden bei einem Treffer BUffs oder Debuffs aufs target gelegt.
         public PossibleStatus[] potentialStatus{get;set;}   //werden bei einem Treffer Statuseffekte aufs Target gelegt
-        public Creature target{get{return target;} set{if(isInRange(value)) target = value;}} //Wer soll das Ziel der Attacke sein? (Nur möglich, wennd as Ziel in Reichweite ist)
+
+        private Creature priv_target;
+        public Creature target{get{return priv_target;} set{if(isInRange(value)) priv_target = value;}} //Wer soll das Ziel der Attacke sein? (Nur möglich, wennd as Ziel in Reichweite ist)
 
         public OffensiveAbility()
         {
