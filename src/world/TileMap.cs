@@ -174,6 +174,7 @@
                 if(fromMap != null)
                     fromMap.removeEntity(player);
                     
+                player.stop(); // while ContainingMap is null
                 addEntity(player);
             });
 
