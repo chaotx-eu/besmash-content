@@ -12,6 +12,8 @@
     [KnownType(typeof(NeutralNPC))]
     [KnownType(typeof(ForestMap))]
     [KnownType(typeof(Dungeon1Map))]
+    [KnownType(typeof(Dungeon2Map))]
+    [KnownType(typeof(Dungeon3Map))]
     [DataContract(IsReference = true)]
     public class TileMap {
         /// Alpha value for all maps and its content
