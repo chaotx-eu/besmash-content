@@ -10,6 +10,9 @@ namespace BesmashContent
         /// ...and hold a weapon
         public Weapon Weapon {get; set;}
 
+        /// The name of this creature
+        public string Name {get; protected set;}
+
         public int MaxHP {get{return (BaseStats.VIT + StatsModifier.VIT) * 5;}}
 
         private int currentHP;
