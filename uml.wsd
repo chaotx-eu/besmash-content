@@ -1,0 +1,54 @@
+@startuml
+title Besmash Content Class-Diagramm
+
+GameObject <|-- MapObject
+MapObject <|--Tile
+
+GameObject : draw()
+GameObject : update()
+
+MapObject <|-- Entity
+Entity <|-- Movable
+Movable <|-- Creature
+Movable <|-- Cursor
+Creature <|-- Player
+Creature <|-- NPC
+NPC <|-- Enemy
+
+Creature --> "1" Stats
+Creature --> "1" Status
+Creature --> "*" Ability
+
+Ability <|-- BuffAbility
+Ability <|-- CureAbility
+Ability <|-- DefensiveAbility
+Ability <|-- HealAbility
+Ability <|-- MovementAbility
+Ability <|-- OffensiveAbility
+
+GameObject <|-- Item
+Entity <|-- ItemEntity
+Item "1" <--> "1" ItemEntity
+
+Item <|-- Artifact
+Item <|-- Consumable
+Item <|-- Equipment
+Equipment <|-- Weapon
+Weapon <|-- Sword
+Weapon <|-- Spear
+Weapon <|-- Bow
+
+Equipment <|-- Armor
+Armor <|-- Chestplate
+Armor <|-- Helmet
+Armor <|-- Pants
+
+TileMap <|-- ForestMap
+TileMap <|-- Dungeon1Map
+TileMap <|-- Dungeon2Map
+TileMap </-- Dungeon3Map
+
+TileMap --> "*" Entity
+TileMap --> "*" Tile
+Team --> "*" Player
+@enduml
