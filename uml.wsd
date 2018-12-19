@@ -4,8 +4,8 @@ title Besmash Content Class-Diagramm
 GameObject <|-- MapObject
 MapObject <|--Tile
 
-GameObject : draw()
-GameObject : update()
+GameObject : draw(SpriteBatch)
+GameObject : update(GameTime)
 
 MapObject <|-- Entity
 Entity <|-- Movable
@@ -46,7 +46,7 @@ Armor <|-- Pants
 TileMap <|-- ForestMap
 TileMap <|-- Dungeon1Map
 TileMap <|-- Dungeon2Map
-TileMap </-- Dungeon3Map
+TileMap <|-- Dungeon3Map
 
 TileMap --> "*" Entity
 TileMap --> "*" Tile
