@@ -74,12 +74,8 @@
         public Movable Slave {
             get { return slave;}
             set {
-                if(value == null)
-                    removeEntity(slave);
-                else {
-                    if(!Entities.Contains(value))
-                        addEntity(value);
-                }
+                if(value != null && !Entities.Contains(value))
+                    addEntity(value);
 
                 slave = value;
                 initSlave();
@@ -316,19 +312,24 @@
                 e.Position.Y == y).ToList();
         }
 
-        public void setFightingState(Team team) {
-            setFightingState(team, team.Leader.Target);
+        /// Shows and enables the cursor
+        public void showCursor() {
+            Cursor.Position = new Vector2(
+                BattleMapCenter.X,
+                BattleMapCenter.Y); // TODO (show at TeamLeader/last position)
+            Cursor.stop();
+            Slave = Cursor;
         }
 
-        public void setFightingState(Team team, Point center) {
-            Cursor.Position = new Vector2(
-                team.Leader.Target.X,
-                team.Leader.Target.Y);
+        /// Hides and disables the cursor
+        public void hideCursor() {
+            removeEntity(Cursor);
+        }
 
+        public void setFightingState(Point center) {
             BattleMapCenter = center;
             State = MapState.Fighting;
-            Slave = Cursor;
-            Cursor.stop();
+            Slave = null;
         }
 
         public void setRoamingState(Team team) {

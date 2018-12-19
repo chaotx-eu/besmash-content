@@ -3,19 +3,25 @@ namespace BesmashContent {
     using System;
 
     public class Player : Creature {
-        /// default width in pixels of a single sprite
+        /// Default width in pixels of a single sprite
         /// in a creature spritesheet
         public static int DEFAULT_SPRITE_W {get;} = 16;
 
-        /// default height in pixels of a single sprite
+        /// Default height in pixels of a single sprite
         /// in a creature spritesheet
         public static int DEFAULT_SPRITE_H {get;} = 16;
 
-        /// default sprite count on horizontal pane
+        /// Default sprite count on horizontal pane
         public static int DEFAULT_SPRITE_C {get;} = 4;
 
-        /// default amount of sprites shown per step
+        /// Default amount of sprites shown per step
         public static int DEFAULT_SPS {get;} = 2;
+
+        /// The main attack move of this player
+        public Ability MainAttack{get; protected set;}
+
+        /// The main movement ability
+        public Ability MainMove {get; protected set;}
 
         public Player() : this("") {}
         public Player(string spriteSheet) {
@@ -26,6 +32,9 @@ namespace BesmashContent {
             SpritesPerSecond = DEFAULT_SPS;
             Facing = Facing.SOUTH;
             Name = randomName();
+
+            MainAttack = new OffensiveAbility(this, 20, "Attack", 10, 1, false);
+            // MainMove = new MovementAbility(this, 50, "Move")
         }
 
         public static Random PlayerRNG = new Random();

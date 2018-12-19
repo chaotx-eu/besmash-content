@@ -1,27 +1,42 @@
 namespace BesmashContent {
     using Microsoft.Xna.Framework;
+    using Microsoft.Xna.Framework.Content;
     using System.Collections.Generic;
     using System;
 
     public class Cursor : Movable {
-        /// default cursor sprite sheet
+        /// Default cursor sprite sheet
         public static string DEFAULT_CURSOR_SHEET = "images/entities/generic_cursor";
 
-        /// default width in pixels of a single sprite
+        /// Default width in pixels of a single sprite
         /// in a cursor spritesheet
         public static int DEFAULT_SPRITE_W {get;} = 16;
 
-        /// default height in pixels of a single sprite
+        /// Default height in pixels of a single sprite
         /// in a cursor spritesheet
         public static int DEFAULT_SPRITE_H {get;} = 16;
 
-        /// default sprite count on horizontal pane
+        /// Default sprite count on horizontal pane
         public static int DEFAULT_SPRITE_C {get;} = 6;
 
-        /// default amount of sprites shown per second,
+        /// Default amount of sprites shown per second,
         /// SpritesPerSecond value divided by 2 is used
         /// for SpritesPerStep
         public static int DEFAULT_SPS {get;} = 3;
+
+        [ContentSerializerIgnore]
+        /// Wether the object beneath this cursor is considered
+        /// selected. Resets on retreival back to false
+        public bool IsSelected {
+            get {
+                bool value = isSelected;
+                isSelected = false;
+                return isSelected;
+            }
+            protected set {isSelected = value;}
+        }
+        
+        private bool isSelected;
 
         public Cursor() : this(Point.Zero) {}
         public Cursor(Point position) : this(position, DEFAULT_CURSOR_SHEET) {}
@@ -55,6 +70,11 @@ namespace BesmashContent {
                 : ContainingMap.getEntities((int)Position.X, (int)Position.Y);
         }
 
+        /// Marks this cursor as selected on its current spot
+        public void select() {
+            IsSelected = true;
+        }
+
         public override void move(int distanceX, int distanceY, CollisionResolver resolve) {
             // cursor never collides but cannot get out of the viewport
             base.move(distanceX, distanceY, (x, y, mo) => {
@@ -64,6 +84,8 @@ namespace BesmashContent {
 
                 return null;
             });
+
+            isSelected = false;
         }
 
         protected override void updateSprite(bool reset) {
