@@ -1,5 +1,6 @@
 namespace BesmashContent
 {
+    using System;
     using System.Collections.Generic;
     public class FightingInfo
     {
@@ -17,7 +18,7 @@ namespace BesmashContent
         public int times {get; set;}   //Wie oft eine Creature pro Runde angreifen kann
         public int temporalAgility {get; set;} //Wird von der Funktion "calculateFigtingOrder" genutzt
         public Stats stats {get; set;}
-        public List<Buff> battleBuffs{get; set;} //Buffs und debuffs 
+        public List<Buff> battleBuffs{get; set;} //Buffs und debuffs
 
         public FightingInfo(Creature Creature, Faction alignment)
         {

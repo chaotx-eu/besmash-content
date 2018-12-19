@@ -104,12 +104,12 @@ namespace BesmashContent
             switch (AI.style)
             {
                 case FightingStyle.Meelee : 
-                    if(MapUtils.ManhattenDistance(this.Position, MapUtils.NearestEnemy(this, BattleManager.map).Position) == 1)
+                    if(MapUtils.ManhattenDistance(this.Position, MapUtils.NearestEnemy(this, BattleUtils.map).Position) == 1)
                     {
                         List<FightingInfo> possibleTargets = new List<FightingInfo>();
-                        foreach(FightingInfo info in BattleManager.fightingEntities)
+                        foreach(FightingInfo info in BattleUtils.FightingEntities)
                         {
-                            if(MapUtils.ManhattenDistance(this.Position, info.Creature.Position) == 1 && !FightingInfo.IsFriendlyTo(BattleManager.fightingEntities.Find(x => x.Creature == this), info))
+                            if(MapUtils.ManhattenDistance(this.Position, info.Creature.Position) == 1 && !FightingInfo.IsFriendlyTo(BattleUtils.FightingEntities.Find(x => x.Creature == this), info))
                                 possibleTargets.Add(info);
                         }
                         if(AI.heal.Count > 0)
@@ -150,7 +150,7 @@ namespace BesmashContent
                                     while (toUse == null)
                                     {
                                         //Zufällig nen move wählen
-                                        int i = BattleManager.random.Next(AI.meelee.Count);
+                                        int i = BattleUtils.random.Next(AI.meelee.Count);
                                         if(AI.meelee[i].AbilityCost <= CurrentAP)
                                             toUse = AI.meelee[i];
                                     }  
@@ -165,7 +165,7 @@ namespace BesmashContent
                                     else
                                     {
                                         //Zufälliges Ziel wählen
-                                        int i = BattleManager.random.Next(AI.meelee.Count);
+                                        int i = BattleUtils.random.Next(AI.meelee.Count);
                                         ((OffensiveAbility)toUse).target = possibleTargets[i].Creature;
                                     }
                                 }
@@ -182,9 +182,9 @@ namespace BesmashContent
                                 else
                                 {
                                     //zu wem will ich gehen?
-                                    foreach(FightingInfo info in BattleManager.fightingEntities)
+                                    foreach(FightingInfo info in BattleUtils.FightingEntities)
                                     {
-                                        if(!FightingInfo.IsFriendlyTo(BattleManager.fightingEntities.Find(x => x.Creature == this), info))
+                                        if(!FightingInfo.IsFriendlyTo(BattleUtils.FightingEntities.Find(x => x.Creature == this), info))
                                         {
                                             possibleTargets.Add(info);
                                         }
@@ -203,7 +203,7 @@ namespace BesmashContent
                                                 case 2 : nextSpace.X--; break;
                                                 case 3 : nextSpace.X++; break;
                                             }
-                                            if(MapUtils.isSpaceFree(new Point((int)nextSpace.X, (int)nextSpace.Y), BattleManager.map))
+                                            if(MapUtils.isSpaceFree(new Point((int)nextSpace.X, (int)nextSpace.Y), BattleUtils.map))
                                                 possibleSpaces.Add(nextSpace);
                                         }
                                     }
@@ -211,7 +211,7 @@ namespace BesmashContent
                                     Vector2 target = new Vector2(0.0f, 0.0f);
                                     foreach(Vector2 space in possibleSpaces)
                                     {
-                                        Point[] path = MapUtils.shortestPath(this.Position, space, BattleManager.fightingEntities.Find(x => x.Creature == this).stats.AGI, BattleManager.map);
+                                        Point[] path = MapUtils.shortestPath(this.Position, space, BattleUtils.FightingEntities.Find(x => x.Creature == this).stats.AGI, BattleUtils.map);
 
                                         if(path.Length < min)
                                         {

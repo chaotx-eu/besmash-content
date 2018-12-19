@@ -27,12 +27,12 @@ namespace BesmashContent
         {
             EffectAnimation animation = new EffectAnimation(parameters, position);
             newInstance().addEffect(animation);
-            BattleManager.newInstance().map.addEntity(animation);
+            BattleUtils.newInstance().map.addEntity(animation);
         }
         public void removeEffect(EffectAnimation animation)
         {
             effectList.Remove(animation);
-            BattleManager.newInstance().map.removeEntity(animation);
+            BattleUtils.newInstance().map.removeEntity(animation);
             if(effectList.Count > 0)
                 this.next();
         }

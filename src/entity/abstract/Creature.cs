@@ -64,7 +64,7 @@ namespace BesmashContent
         [ContentSerializer(Optional=true)]
         public Status status{get; set;}
 
-        public static BattleManager BattleManager = BattleManager.newInstance();
+        public static BattleUtils BattleUtils = BattleUtils.newInstance();
 
         public Creature()
         {
@@ -112,7 +112,7 @@ namespace BesmashContent
              */
             if(this.status.asleep)
             {
-                if (BattleManager.random.Next(100) <= (10 * status.roundsAsleep) + 35)
+                if (BattleUtils.random.Next(100) <= (10 * status.roundsAsleep) + 35)
                 {
                     status.asleep = false;
                     status.roundsAsleep = 0;
@@ -130,7 +130,7 @@ namespace BesmashContent
 
         public virtual void onDeath() //Creature ist gestorben
         {
-            BattleManager.removeFromBattle(this);
+            //Kann überschrieben werden
         }
     }
 }

@@ -63,22 +63,22 @@ namespace BesmashContent
         {
             this.determineTarget();
             bool success = false;   //Wird bei Erfolg mit true überschrieben
-            FightingInfo attacker = Creature.BattleManager.fightingEntities.Find(e => e.Creature == this.AbilityUser);    //Sucht die FightingInfo des angreifers aus der Liste der fightingCreatures
-            FightingInfo defender = Creature.BattleManager.fightingEntities.Find(e => e.Creature == this.target);         //Sucht die FightingInfo des verteidiger aus der Liste der fightingCreatures
+            FightingInfo attacker = Creature.BattleUtils.FightingEntities.Find(e => e.Creature == this.AbilityUser);    //Sucht die FightingInfo des angreifers aus der Liste der fightingCreatures
+            FightingInfo defender = Creature.BattleUtils.FightingEntities.Find(e => e.Creature == this.target);         //Sucht die FightingInfo des verteidiger aus der Liste der fightingCreatures
             
-            success = Creature.BattleManager.attack(attacker, defender, this);   //Der Angriff wird, über den Battlemanager ausgeführt
+            success = Creature.BattleUtils.attack(attacker, defender, this);   //Der Angriff wird, über den Battlemanager ausgeführt
 
             if(success)
             {
                 foreach (PossibleBuff b in potentialBuffs)  //Bei einem Erfolg werden Buffs und Debuffs applied
                 {
-                    if (b.chance >= Creature.BattleManager.random.Next(100))
+                    if (b.chance >= Creature.BattleUtils.random.Next(100))
                         defender.battleBuffs.Add(new Buff(defender, b.type, b.rounds, b.turns, b.strength));
                 }
 
                 foreach (PossibleStatus s in potentialStatus)   //Bei einem Erfolg werden Statuseffekte applied
                 {
-                    if (s.chance >= Creature.BattleManager.random.Next(100))
+                    if (s.chance >= Creature.BattleUtils.random.Next(100))
                         Status.addStatus(defender.Creature, s.type);
                 }
 

@@ -29,7 +29,7 @@ namespace BesmashContent
         }
         public MovementAbility(Creature user, int cost, string name, Point destination, Movable target) : base(user, cost, name)
         {
-            maxDistance = Creature.BattleManager.fightingEntities.Find(x => x.Creature == AbilityUser).stats.AGI;
+            maxDistance = Creature.BattleUtils.FightingEntities.Find(x => x.Creature == AbilityUser).stats.AGI;
             this.path = determineShortestPath(new Point((int)target.Position.X, (int)target.Position.Y), destination);
             this.type = Type.move;
         }
@@ -43,9 +43,9 @@ namespace BesmashContent
 
         public Point[] determineShortestPath(Point start, Point destination)
         {
-            if (MovementAbility.isPathPossible(start, destination, maxDistance, Creature.BattleManager.map))
+            if (MovementAbility.isPathPossible(start, destination, maxDistance, Creature.BattleUtils.map))
             {
-                return MapUtils.shortestPath(start, destination, maxDistance, Creature.BattleManager.map);
+                return MapUtils.shortestPath(start, destination, maxDistance, Creature.BattleUtils.map);
             }
             else 
                 return new Point[0];
