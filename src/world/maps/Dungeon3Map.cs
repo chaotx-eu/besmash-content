@@ -35,7 +35,6 @@ namespace BesmashContent {
         /// entities on load
         protected override void spawnEntities() {
             base.spawnEntities(); // clears entity list by default
-
             // some example npcs
             Entity endBoss = new NeutralNPC();
             endBoss.SpriteSheet = "images/entities/kevin_sheet";

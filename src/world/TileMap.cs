@@ -20,6 +20,7 @@
     [KnownType(typeof(BuffAbility))]
     [KnownType(typeof(Cursor))]
     [KnownType(typeof(NeutralNPC))]
+    [KnownType(typeof(Enemy))]
     [KnownType(typeof(ForestMap))]
     [KnownType(typeof(Dungeon1Map))]
     [KnownType(typeof(Dungeon2Map))]
