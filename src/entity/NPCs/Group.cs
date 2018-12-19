@@ -6,7 +6,7 @@ namespace BesmashContent
     {
         public List<Enemy> member = new List<Enemy>();
 
-        public void adMember(Enemy newMember){
+        public void addMember(Enemy newMember){
             member.Add(newMember);
         }
         public List<Enemy> getMember(){

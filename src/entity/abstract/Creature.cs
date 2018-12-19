@@ -17,7 +17,7 @@ namespace BesmashContent
         public string Name {get; protected set;}
         [ContentSerializerIgnore]
 
-        public int MaxHP {get{return (BaseStats.VIT + StatsModifier.VIT) * 5;}}
+        public int MaxHP {get{return (BaseStats.VIT + StatsModifier.VIT) * 10;}}
         
         private int currentHP;
         [ContentSerializer(Optional=true)]
@@ -76,6 +76,7 @@ namespace BesmashContent
             // werden ggf. ueberschrieben
             BaseStats = new Stats();
             StatsModifier = new Stats();
+            currentHP = MaxHP;
             status = new Status(); // sicherheitshalber
         }
         public Creature(Stats stats, Ability[] abilities)
@@ -83,6 +84,7 @@ namespace BesmashContent
             MaxAP = 100;
             BaseStats = stats;
             Abilities = abilities;
+            currentHP = MaxHP;
             StatsModifier = new Stats();
             status = new Status(); // sicherheitshalber
         }

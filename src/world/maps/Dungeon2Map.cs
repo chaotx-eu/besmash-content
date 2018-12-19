@@ -80,8 +80,8 @@ namespace BesmashContent {
                     }                 
                     leader.Position = new Vector2(posL1,posL2);
                     addEntity(leader);
-                    group.adMember(leader);
-                    leader.group=group;
+                    group.addMember(leader);
+                    leader.Group=group;
                     int groupSize=rand.Next(1, 4);
                     int j=0;
                     int maxTry=0;
@@ -112,8 +112,8 @@ namespace BesmashContent {
                             }  
                             minion.Position = new Vector2(posM1,posM2);
                             addEntity(minion);  
-                            group.adMember(minion);
-                            minion.group=group;
+                            group.addMember(minion);
+                            minion.Group=group;
                             j++;                    
                         }
                         maxTry++;
