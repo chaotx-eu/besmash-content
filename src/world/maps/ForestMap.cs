@@ -39,7 +39,8 @@ namespace BesmashContent {
                     player.StepTime = 250;
                     if(i >= 0) members[i] = player;
                 };
-
+                
+                leader.aggroRadius = 5;
                 team.add(leader, members);
                 team.Formation[members[0]] = new Point(1, 1);
                 team.Formation[members[1]] = new Point(-1, 1);

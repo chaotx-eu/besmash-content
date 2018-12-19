@@ -81,7 +81,20 @@ namespace BesmashContent.Utility {
             int y = (int)a.Y - (int)b.Y;
             return (x < 0 ? x * -1 : x) + (y < 0 ? y * -1 : y);
         }
-
+        public static List<Point> getRadius(Point origin, int radius)
+        {
+            List<Point> coordinates = new List<Point>();
+            for(int i = radius * (-1); i <= radius; i++)
+            {
+                coordinates.Add(new Point(origin.X, origin.Y + i));
+                for(int j = 1 ; j <= radius; j++)
+                {
+                    coordinates.Add(new Point(origin.X - j, origin.Y + i));
+                    coordinates.Add(new Point(origin.X + j, origin.Y + i));
+                }
+            }
+            return coordinates;
+        }
         public static Point[] shortestPath(Vector2 start, Vector2 destination, int maxDistance, TileMap tileMap)
         {
             return shortestPath(new Point((int)start.X, (int) start.Y), new Point((int)destination.X, (int)destination.Y), maxDistance, tileMap);

@@ -17,8 +17,8 @@ namespace BesmashContent
         public string Name {get; protected set;}
         [ContentSerializerIgnore]
 
-        public int MaxHP {get{return (BaseStats.VIT + StatsModifier.VIT) * 10;}}
-        
+        public int MaxHP {
+            get{return (BaseStats == null | StatsModifier == null) ? 50 : (BaseStats.VIT + StatsModifier.VIT) * 10;}}
         private int currentHP;
         [ContentSerializer(Optional=true)]
         public int CurrentHP {

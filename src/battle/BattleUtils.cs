@@ -9,6 +9,17 @@ namespace BesmashContent
         public Random random;
         public TileMap map;
         private bool battleIsHappening;
+        public struct groupToAdd
+        {
+            public List<Creature> group {get;set;}
+            public FightingInfo.Faction Alignment {get;set;}
+            public groupToAdd(List<Creature> creatures, FightingInfo.Faction side)
+            {
+                group = creatures; Alignment = side;
+            }
+        }
+        public List<groupToAdd> AddTheeseGroups{get;set;}
+
         public static BattleUtils newInstance()
         {
             if(instance == null)
@@ -19,7 +30,14 @@ namespace BesmashContent
         private BattleUtils()
         {
             random = new Random();
+            FightingEntities = new List<FightingInfo>();
             battleIsHappening = false;
+            AddTheeseGroups = new List<groupToAdd>();
+        }
+
+        public void add(List<Creature> creatures, FightingInfo.Faction side)
+        {
+            AddTheeseGroups.Add(new groupToAdd(creatures, side));
         }
 
         public bool attack(FightingInfo attacker, FightingInfo defender, OffensiveAbility attack)
@@ -41,6 +59,7 @@ namespace BesmashContent
 
             return success;
         }
+
 
         public void heal(FightingInfo source, FightingInfo reciever, int amount)
         {
