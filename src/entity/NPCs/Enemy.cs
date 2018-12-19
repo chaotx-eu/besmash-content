@@ -1,7 +1,8 @@
 namespace BesmashContent
 {
-    public abstract class Enemy : NPC
+    public class Enemy : NPC
     {
         public int xp{get; set;}
+        public Group group {get; set;}
     }
 }
