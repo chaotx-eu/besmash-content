@@ -15,6 +15,8 @@
     [KnownType(typeof(Dungeon1Map))]
     [KnownType(typeof(Dungeon2Map))]
     [KnownType(typeof(Dungeon3Map))]
+    [KnownType(typeof(Forest1Ext))]
+    [KnownType(typeof(Forest1Int))]
     [DataContract(IsReference = true)]
     public class TileMap {
         /// Possible states a map can be in
@@ -150,10 +152,11 @@
         private string otherMap = null;
         private Point viewport = new Point(4, 4);
         private List<Entity> entities;
-        private Tile[][] tileArray;
+        private Dictionary<string, Tile> tileDict;
         private Movable slave;
         private Game game;
 
+        private int minLayer, maxLayer;
         private int tileWidth, tileHeight;
         private int width, height;
         private int x, y;
@@ -192,14 +195,16 @@
                 height = Tiles.Max(t => (int)t.Position.Y) + 1;
             }
 
-            // Tiles are saved in an array for faster access
-            tileArray = new Tile[width][];
+            // Tiles are saved in a dictionary for faster access
+            tileDict = new Dictionary<string, Tile>();
+            minLayer = maxLayer = -1;
 
-            for(int x = 0; x < width; ++x)
-                tileArray[x] = new Tile[height];
-
-            Tiles.ForEach(t => tileArray
-                [(int)t.Position.X][(int)t.Position.Y] = t);
+            Tiles.ForEach(t => {
+                string index = t.Position.X + "|" + t.Position.Y + "|" + t.MapLayer;
+                if(minLayer < 0 || t.MapLayer < minLayer) minLayer = (int)t.MapLayer;
+                if(maxLayer < 0 || t.MapLayer > maxLayer) maxLayer = (int)t.MapLayer;
+                tileDict.Add(index, t);
+            });
 
             initTileSize();
             initSlave();
@@ -270,23 +275,33 @@
         /// Aligns the map and updates all game object on it.
         public void update(GameTime time) {
             align();
-            foreach(Tile tile in Tiles) tile.update(time);
-            foreach(Entity entity in Entities) entity.update(time);
+            foreach(Tile tile in Tiles)
+                if(!tile.Disabled) tile.update(time);
+
+            foreach(Entity entity in Entities)
+                entity.update(time);
         }
 
         /// Draws all game objects on this map.
         /// Closes the passed sprite batch when done.
         public void draw(SpriteBatch batch) {
             // https://gamedev.stackexchange.com/questions/6820/how-do-i-disable-texture-filtering-for-sprite-scaling-in-xna-4-0
-            batch.Begin(SpriteSortMode.Deferred, null, SamplerState.PointClamp, null, null, null, null);
-            foreach(Tile tile in Tiles) tile.draw(batch);
-            foreach(Entity entity in Entities) entity.draw(batch);
+            batch.Begin(SpriteSortMode.FrontToBack, null, SamplerState.PointClamp, null, null, null, null);
+
+            foreach(Tile tile in Tiles)
+                if(!tile.Disabled && !tile.Hidden)
+                    tile.draw(batch);
+
+            foreach(Entity entity in Entities)
+                entity.draw(batch);
+        
             batch.End();
         }
 
         public void addEntity(Entity e) {
             if(!Entities.Contains(e)) {
                 e.ContainingMap = this;
+                e.Layer = 4/8f; // TODO EntityLayer/MAX_LAYER
                 Entities.Add(e);
             }
         }
@@ -300,10 +315,21 @@
         }
 
         public Tile getTile(int x, int y) {
-            if(x >= 0 && x < Width && y >= 0 && y < Height)
-                return tileArray[x][y];
+            return getTile(x, y, false);
+        }
 
-            return null;
+        public Tile getTile(int x, int y, bool top) {
+            return getTile(x, y, top ? maxLayer : minLayer);
+        }
+
+        public Tile getTile(int x, int y, int z) {
+            return tileDict[x+"|"+y+"|"+z];
+        }
+
+        public List<Tile> getTiles(int x, int y) {
+            return tileDict.Values.Where(t =>
+                t.Position.X == x && !t.Disabled &&
+                t.Position.Y == y).ToList();
         }
 
         public List<Entity> getEntities(int x, int y) {

@@ -22,6 +22,11 @@ namespace BesmashContent {
         [ContentSerializer(Optional = true)]
         public float Rotation {get; set;} = 0;
 
+        /// Drawing layer of this GameObject, default 0
+        [DataMember]
+        [ContentSerializer(Optional = true)] // TODO ignore causes crash
+        public virtual float Layer {get; set;} = 0;
+
         /// Rectangle to draw to on the screen.
         [DataMember]
         [ContentSerializerIgnore]
@@ -31,11 +36,6 @@ namespace BesmashContent {
         [DataMember]
         [ContentSerializerIgnore]
         public Color Color {get; set;} = Color.White;
-
-        /// Drawing layer of this GameObject, default 1f
-        [DataMember]
-        [ContentSerializerIgnore]
-        public float Layer {get; set;} = 1f;
 
         /// Reference to SpriteSheet image
         private Texture2D sheet;

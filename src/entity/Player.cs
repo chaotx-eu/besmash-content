@@ -35,6 +35,17 @@ namespace BesmashContent {
 
             MainAttack = new OffensiveAbility(this, 20, "Attack", 10, 1, false);
             // MainMove = new MovementAbility(this, 50, "Move")
+
+            // no collision with other players
+            CollisionResolver = ((x, y, mos) => {
+                foreach(MapObject mo in mos) {
+                    if(mo is Tile && ((Tile)mo).Solid
+                    || mo is Entity && !(mo is Player))
+                        return Point.Zero;
+                }
+
+                return null;
+            });
         }
 
         public static Random PlayerRNG = new Random();

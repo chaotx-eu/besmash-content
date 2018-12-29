@@ -46,10 +46,11 @@ namespace BesmashContent {
             List<Point> ray = MapUtils.getRay(tx, ty, x, y);
 
             foreach(Point p in ray) {
-                Tile tile = ContainingMap.getTile(p.X, p.Y);
-                if(tile == null || tile.Solid) return false;
                 // if(ContainingMap.getEntities(p.X, p.Y).Count > 0)
                 //     return false;
+                
+                foreach(Tile tile in ContainingMap.getTiles(p.X, p.Y))
+                    if(tile == null || tile.Solid) return false;
             }
 
             return true;

@@ -2,6 +2,7 @@ namespace BesmashContent {
     using Microsoft.Xna.Framework;
     using Microsoft.Xna.Framework.Content;
     using System.Collections.Generic;
+    using System.Linq;
     using System;
 
     public class Cursor : Movable {
@@ -61,7 +62,9 @@ namespace BesmashContent {
             if(entities.Count > 1)
                 return entities.Find(e => e != this);
 
-            return ContainingMap.getTile(x, y);
+            return ContainingMap.getTiles(x, y)
+                .OrderByDescending(t => t.MapLayer)
+                .FirstOrDefault();
         }
 
         /// Returns a list of entities below the cursor

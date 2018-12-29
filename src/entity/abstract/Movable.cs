@@ -1,6 +1,9 @@
 namespace BesmashContent {
-    using System.Runtime.Serialization;
     using Microsoft.Xna.Framework;
+    using Microsoft.Xna.Framework.Content;
+    using System.Runtime.Serialization;
+    using System.Collections.Generic;
+    using System.Linq;
     using System;
 
     /// Custom EventArgs for MoveEvents.
@@ -22,20 +25,31 @@ namespace BesmashContent {
 
     /// Defines how to react on collision with another MapObject.
     /// Where distanceX and distanceY are the originally planned
-    /// movement values and other is the MapObject this object
-    /// would collide with. As return value a Point is expected
-    /// representing the new movement values to be taken instead
-    /// or null if nothing should happen.
-    /// Note: Unfinished, may change in the future!
-    public delegate Point? CollisionResolver(int distanceX, int distanceY, MapObject other);
+    /// movement values and others is a list of MapObjects this
+    /// object would collide with. As return value a Point is
+    /// expected representing the new movement values to be taken
+    /// instead or null if nothing should happen (i.e. no collision)
+    public delegate Point? CollisionResolver(int distanceX, int distanceY, List<MapObject> others);
 
     /// An object with the ability to move
     /// over a TileMap.
     public abstract class Movable : Entity {
         /// Time in millis this object needs to
-        /// move the distance of one Tile.
+        /// move the distance of one Tile. Will be
+        /// multiplied with step time multiplier on
+        /// retreival
         [DataMember]
-        public long StepTime {get; set;} = 0;
+        public int StepTime {
+            get {return (int)(stepTime*StepTimeMultiplier);}
+            set {stepTime = value;}
+        }
+
+        private int stepTime;
+
+        /// StepTime is multiplied with this
+        /// value on retreival
+        [DataMember]
+        public float StepTimeMultiplier {get; set;} = 1;
 
         /// Holds wether this Movable is currently moving.
         [DataMember]
@@ -56,6 +70,11 @@ namespace BesmashContent {
         [DataMember]
         public int SpritesPerSecond {get; set;} = 1;
 
+        /// The default collision resolver which is used
+        /// in case none is passed to move
+        [ContentSerializerIgnore]
+        public CollisionResolver CollisionResolver {get; protected set;}
+
         /// Event handler for handling move events i.e.
         /// will be triggered after this Movable started moving.
         public event MoveStartedHandler MoveStartedEvent;
@@ -69,6 +88,19 @@ namespace BesmashContent {
         [DataMember]
         public Point Target {get; set;}
 
+        /// Initializes a default collision resolver where solid
+        /// tiles and entities are unpassable. Behaviour has to be
+        /// reimplemented if a different CollisionResolver is used.
+        public Movable() {
+            CollisionResolver = (x, y, mos) => {
+                foreach(MapObject mo in mos)
+                    if(mo is Entity || mo is Tile && ((Tile)mo).Solid)
+                        return Point.Zero;
+
+                return null;
+            };
+        }
+
         /// Stops any movement immediately.
         public virtual void stop() {
             Moving = false;
@@ -76,17 +108,17 @@ namespace BesmashContent {
                 Position.ToPoint(), Target));
         }
 
+        /// Moves this object distanceX tiles on the x-axis and
+        /// distanceY tiles on the y-axis relative to its own
+        /// position. The default collision resolver is used
         public virtual void move(int distanceX, int distanceY) {
-            // Default CollisionResolver => Solid Tiles and Entities are unpassable.
-            // Has to be reimplemented if a different CollisionResolver is used.
-            move(distanceX, distanceY, ((x, y, mo) => {
-                if(mo is Entity || mo is Tile && ((Tile)mo).Solid)
-                    return Point.Zero;
-                    
-                return null;
-            }));
+            move(distanceX, distanceY, CollisionResolver);
         }
 
+        /// Moves this object distanceX tiles on the x-axis and
+        /// distanceY tiles on the y-axis relative to its own
+        /// position. Collisions are resolved by the passed
+        /// collision resolver.
         public virtual void move(int distanceX, int distanceY, CollisionResolver resolve) {
             if(!Moving && (distanceX != 0 || distanceY != 0)) {
                 int positionX = (int)Position.X;
@@ -95,13 +127,11 @@ namespace BesmashContent {
                     positionX + distanceX,
                     positionY + distanceY);
 
-                Tile tgtTile = ContainingMap.getTile(Target.X, Target.Y);
-                Point? newDistance = resolve(distanceX, distanceY, tgtTile);
-                if(newDistance == null) {
-                    foreach(Entity e in ContainingMap.getEntities(Target.X, Target.Y))
-                        if((newDistance = resolve(distanceX, distanceY, e)) != null) break;
-                }
+                List<MapObject> targets = ContainingMap
+                    .getTiles(Target.X, Target.Y).Cast<MapObject>()
+                    .Concat(ContainingMap.getEntities(Target.X, Target.Y)).ToList();
 
+                Point? newDistance = resolve(distanceX, distanceY, targets);
                 Facing = distanceY > 0 ? Facing.SOUTH
                     : distanceY < 0 ? Facing.NORTH
                     : distanceX > 0 ? Facing.EAST
@@ -197,10 +227,12 @@ namespace BesmashContent {
             MoveFinishedHandler handler = MoveFinishedEvent;
             if(handler != null) handler(this, args);
 
-            // trigger tile stepped event
+            // trigger tile stepped event(s)
             if(ContainingMap != null) {
-                Tile tile = ContainingMap.getTile(args.Target.X, args.Target.Y);
-                if(tile != null) tile.onTileStepped(new TileEventArgs(this, ContainingMap, args.Target));
+                ContainingMap.getTiles(args.Target.X, args.Target.Y).ForEach(tile => {
+                    tile.onTileStepped(new TileEventArgs(
+                        this, ContainingMap, args.Target));
+                });
             }
         }
     }
