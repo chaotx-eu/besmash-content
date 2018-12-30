@@ -121,6 +121,14 @@ namespace BesmashContent {
         /// collision resolver.
         public virtual void move(int distanceX, int distanceY, CollisionResolver resolve) {
             if(!Moving && (distanceX != 0 || distanceY != 0)) {
+                // TODO sprite is updated with delay
+                //      when turning, not sure why
+                Facing = distanceY > 0
+                    ? Facing.SOUTH : distanceY < 0
+                    ? Facing.NORTH : distanceX > 0
+                    ? Facing.EAST : distanceX < 0
+                    ? Facing.WEST : Facing;
+
                 int positionX = (int)Position.X;
                 int positionY = (int)Position.Y;
                 Target = new Point(
@@ -132,12 +140,6 @@ namespace BesmashContent {
                     .Concat(ContainingMap.getEntities(Target.X, Target.Y)).ToList();
 
                 Point? newDistance = resolve(distanceX, distanceY, targets);
-                Facing = distanceY > 0 ? Facing.SOUTH
-                    : distanceY < 0 ? Facing.NORTH
-                    : distanceX > 0 ? Facing.EAST
-                    : distanceX < 0 ? Facing.WEST
-                    : Facing;
-
                 if(newDistance != null) {
                     move(newDistance.Value.X, newDistance.Value.Y, resolve);
                     return;
