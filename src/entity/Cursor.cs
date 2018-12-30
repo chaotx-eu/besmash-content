@@ -27,12 +27,12 @@ namespace BesmashContent {
 
         [ContentSerializerIgnore]
         /// Wether the object beneath this cursor is considered
-        /// selected. Resets on retreival back to false
+        /// selected. Resets back to false on retreival
         public bool IsSelected {
             get {
                 bool value = isSelected;
                 isSelected = false;
-                return isSelected;
+                return value;
             }
             protected set {isSelected = value;}
         }
@@ -49,6 +49,14 @@ namespace BesmashContent {
             SpritesPerSecond = DEFAULT_SPS;
             SpritesPerStep = SpritesPerSecond/2;
             StepTime = 200;
+            CollisionResolver = (x, y, mo) => {
+                isSelected = false;
+                if(Math.Abs(Position.X + x - ContainingMap.BattleMapCenter.X) > ContainingMap.Viewport.X
+                || Math.Abs(Position.Y + y - ContainingMap.BattleMapCenter.Y) > ContainingMap.Viewport.Y)
+                    return Point.Zero;
+
+                return null;
+            };
         }
 
         /// Returns the first map object found below the cursor
@@ -76,19 +84,6 @@ namespace BesmashContent {
         /// Marks this cursor as selected on its current spot
         public void select() {
             IsSelected = true;
-        }
-
-        public override void move(int distanceX, int distanceY, CollisionResolver resolve) {
-            // cursor never collides but cannot get out of the viewport
-            base.move(distanceX, distanceY, (x, y, mo) => {
-                if(Math.Abs(Position.X + x - ContainingMap.BattleMapCenter.X) > ContainingMap.Viewport.X
-                || Math.Abs(Position.Y + y - ContainingMap.BattleMapCenter.Y) > ContainingMap.Viewport.Y)
-                    return Point.Zero;
-
-                return null;
-            });
-
-            isSelected = false;
         }
 
         protected override void updateSprite(bool reset) {

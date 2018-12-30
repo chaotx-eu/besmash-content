@@ -1,21 +1,10 @@
 namespace BesmashContent {
     using Microsoft.Xna.Framework;
+    using Microsoft.Xna.Framework.Content;
+    using System.Collections.Generic;
+    using System.Linq;
 
     public class Creature : Movable {
-        /// Default width in pixels of a single sprite
-        /// in a creature spritesheet
-        public static int DEFAULT_SPRITE_W {get;} = 16;
-
-        /// Default height in pixels of a single sprite
-        /// in a creature spritesheet
-        public static int DEFAULT_SPRITE_H {get;} = 16;
-
-        /// Default sprite count on horizontal pane
-        public static int DEFAULT_SPRITE_C {get;} = 4;
-
-        /// Default amount of sprites shown per step
-        public static int DEFAULT_SPS {get;} = 2;
-
         /// Creatures may wear armor
         public Helmet Helmet {get; set;}
         public Chestplate Chestplate {get; set;}
@@ -25,18 +14,50 @@ namespace BesmashContent {
         public Weapon Weapon {get; set;}
 
         /// The name of this creature
-        public string Name {get; protected set;}
+        public string Name {
+            get {return name == null ? Title : name;}
+            protected set {name = value;}
+        }
+
+        private string name;
 
         /// The stats of this creature
         public Stats Stats {get; protected set;}
 
+        /// Basic attack of this creature
+        public BasicAttack BasicAttack {get; protected set;}
+
+        /// Abilities this creature is capable of
+        public List<Ability> Abilities {get; protected set;} = new List<Ability>();
+
+        /// Loads required resources for this creature
+        public override void load(ContentManager content) {
+            base.load(content);
+            Abilities.ForEach(a => a.load(content));
+            if(BasicAttack != null) BasicAttack.load(content);
+        }
+
         public Creature() : this("") {}
-        public Creature(string spriteSheet) {
-            SpriteSheet = spriteSheet;
-            SpriteRectangle = new Rectangle(0, 0, DEFAULT_SPRITE_W, DEFAULT_SPRITE_H);
-            SpriteCount = DEFAULT_SPRITE_C;
-            SpritesPerStep = DEFAULT_SPS;
-            SpritesPerSecond = DEFAULT_SPS;
+        public Creature(string spriteSheet) : base(spriteSheet) {}
+
+        /// Adds an ability to this creatures ability list
+        /// and loads its required resources (TODO)
+        public void addAbility(Ability ability) {
+            // if(IsLoaded) ability.load(ContainingMap.Content);
+            ability.User = this;
+            Abilities.Add(ability);
+        }
+
+        /// Updates this creature and any abilities that
+        /// are currently executed
+        public override void update(GameTime gameTime) {
+            base.update(gameTime);
+
+            Abilities.Where(a => a.IsExecuting)
+                .ToList().ForEach(a => a.update(gameTime));
+
+            if(BasicAttack != null && BasicAttack.IsExecuting)
+                BasicAttack.update(gameTime);
         }
     }
 }

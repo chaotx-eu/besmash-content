@@ -15,6 +15,7 @@ namespace BesmashContent {
 
         /// Sprite Rectangle in SpriteSheet.
         [DataMember]
+        [ContentSerializer(Optional = true)]
         public Rectangle SpriteRectangle {get; set;}
 
         /// Rotation of the Sprite.
@@ -40,8 +41,9 @@ namespace BesmashContent {
         /// Reference to SpriteSheet image
         private Texture2D sheet;
 
-        public void load(ContentManager manager) {
-            sheet = manager.Load<Texture2D>(SpriteSheet);
+        /// Loads required resources for this object
+        public virtual void load(ContentManager content) {
+            sheet = content.Load<Texture2D>(SpriteSheet);
         }
 
         /// Draws this object to the screen.
@@ -57,7 +59,7 @@ namespace BesmashContent {
         }
         
         /// Updates this object.
-        public virtual void update(GameTime time) {}
+        public virtual void update(GameTime gameTime) {}
 
         // TODO move to own libary (BesmashUtil?)
         private Rectangle rotateRectangle(Rectangle rectangle, int rotation) {

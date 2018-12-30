@@ -67,6 +67,17 @@
                 : entities;
         }}
 
+        /// TODO test serialization!
+        /// List of sprite animations on this map
+        [DataMember]
+        [ContentSerializerIgnore]
+        public List<SpriteAnimation> Animations {get {
+            return animations == null
+                ? (animations = new List<SpriteAnimation>())
+                : animations;
+        }}
+        private List<SpriteAnimation> animations;
+
         /// Movable object on this map. Gets affected
         /// by user input (e.g. Controller/Keyboard).
         /// Will always be centered on the screen.
@@ -256,29 +267,32 @@
 
         /// Loads all for this map required assets
         /// into memory.
-        public void load(ContentManager manager) {
-            foreach(Tile tile in Tiles) tile.load(manager);
-            foreach(Entity entity in Entities) entity.load(manager);
+        public void load(ContentManager content) {
+            foreach(Tile tile in Tiles) tile.load(content);
+            foreach(Entity entity in Entities) entity.load(content);
 
             // testing: background music (TODO)
             if(BackgroundMusicFile != null) try {
-                BackgroundMusic = manager.Load<Song>(BackgroundMusicFile);
+                BackgroundMusic = content.Load<Song>(BackgroundMusicFile);
                 // MediaPlayer.Play(BackgroundMusic);
             } catch(ContentLoadException) {
                 // ignore
             }
 
-            Cursor.load(manager);
+            Cursor.load(content);
         }
 
         /// Aligns the map and updates all game object on it.
-        public void update(GameTime time) {
+        public void update(GameTime gameTime) {
             align();
             foreach(Tile tile in Tiles)
-                if(!tile.Disabled) tile.update(time);
+                if(!tile.Disabled) tile.update(gameTime);
 
             foreach(Entity entity in Entities)
-                entity.update(time);
+                entity.update(gameTime);
+
+            for(int i = 0; i < Animations.Count; ++i)
+                Animations[i].update(gameTime);
         }
 
         /// Draws all game objects on this map.
@@ -293,8 +307,20 @@
 
             foreach(Entity entity in Entities)
                 entity.draw(batch);
+
+            foreach(SpriteAnimation animation in Animations)
+                animation.draw(batch);
         
             batch.End();
+        }
+
+        /// Adds an animation to the map and runs it
+        public void addAnimation(SpriteAnimation a) {
+            if(!Animations.Contains(a))
+                Animations.Add(a);
+
+            a.ContainingMap = this;
+            a.start(this);
         }
 
         public void addEntity(Entity e) {

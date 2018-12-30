@@ -33,7 +33,21 @@ namespace BesmashContent {
 
     /// An object with the ability to move
     /// over a TileMap.
-    public abstract class Movable : Entity {
+    public class Movable : Entity {
+        /// Default width in pixels of a single sprite
+        /// in a creature spritesheet
+        public static int DEFAULT_SPRITE_W {get;} = 16;
+
+        /// Default height in pixels of a single sprite
+        /// in a creature spritesheet
+        public static int DEFAULT_SPRITE_H {get;} = 16;
+
+        /// Default sprite count on horizontal pane
+        public static int DEFAULT_SPRITE_C {get;} = 4;
+
+        /// Default amount of sprites shown per step
+        public static int DEFAULT_SPS {get;} = 2;
+
         /// Time in millis this object needs to
         /// move the distance of one Tile. Will be
         /// multiplied with step time multiplier on
@@ -91,7 +105,13 @@ namespace BesmashContent {
         /// Initializes a default collision resolver where solid
         /// tiles and entities are unpassable. Behaviour has to be
         /// reimplemented if a different CollisionResolver is used.
-        public Movable() {
+        public Movable() : this("") {}
+        public Movable(string spriteSheet) {
+            SpriteSheet = spriteSheet;
+            SpriteRectangle = new Rectangle(0, 0, DEFAULT_SPRITE_W, DEFAULT_SPRITE_H);
+            SpriteCount = DEFAULT_SPRITE_C;
+            SpritesPerStep = DEFAULT_SPS;
+            SpritesPerSecond = DEFAULT_SPS;
             CollisionResolver = (x, y, mos) => {
                 foreach(MapObject mo in mos)
                     if(mo is Entity || mo is Tile && ((Tile)mo).Solid)
@@ -152,12 +172,12 @@ namespace BesmashContent {
         }
         
         float stepTimer, idleTimer;
-        public override void update(GameTime time) {
+        public override void update(GameTime gameTime) {
             if(ContainingMap.Slave != this || (ContainingMap.Slave is Cursor))
-                base.update(time);
+                base.update(gameTime);
 
             if(Moving) {
-                int et = time.ElapsedGameTime.Milliseconds;
+                int et = gameTime.ElapsedGameTime.Milliseconds;
                 float positionX = Position.X;
                 float positionY = Position.Y;
                 idleTimer = 0;
@@ -199,7 +219,7 @@ namespace BesmashContent {
                     Position.ToPoint(), Target));
 
             } else {
-                idleTimer += time.ElapsedGameTime.Milliseconds;
+                idleTimer += gameTime.ElapsedGameTime.Milliseconds;
 
                 if(idleTimer > 1000f/SpritesPerSecond) {
                     updateSprite(true);

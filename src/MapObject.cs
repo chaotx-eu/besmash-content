@@ -9,27 +9,29 @@ namespace BesmashContent {
     /// Game objects which can be present on a map.
     [DataContract(IsReference = true)]
     public class MapObject : GameObject {
-        [DataMember]
-        [ContentSerializerIgnore]
-        public TileMap ContainingMap {get; set;}
-
         // Needed to assign values to Position Vector
         // when deserializing a xml file.
         // The XmlSerializer seems to be somewhat
-        // inconsistent regarding Vecotr types.
+        // inconsistent regarding Vector types.
         // http://community.monogame.net/t/xmlserializer-wont-deserialize-vector2/10391
-        [ContentSerializer(ElementName = "Position")]
+        [ContentSerializer(ElementName = "Position", Optional = true)]
         private Point position {
             get {return new Point((int)Position.X, (int)Position.Y);}
             set {Position = new Vector2(value.X, value.Y);}
         }
-        
+
+        /// The map this object is contained by
+        [DataMember]
+        [ContentSerializerIgnore]
+        public TileMap ContainingMap {get; set;}
+
         /// Position on a TileMap.
         [DataMember]
         [ContentSerializerIgnore]
         public Vector2 Position {get; set;}
 
-        public override void update(GameTime time) {
+        public override void update(GameTime gameTime) {
+            base.update(gameTime);
             DestinationRectangle = new Rectangle(
                 ContainingMap.X + (int)(Position.X*ContainingMap.TileWidth),
                 ContainingMap.Y + (int)(Position.Y*ContainingMap.TileHeight),

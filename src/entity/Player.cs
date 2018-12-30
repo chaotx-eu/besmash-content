@@ -3,9 +3,14 @@ namespace BesmashContent {
     using System;
 
     public class Player : Creature {
-        public Player() : this(randomName()) {}
-        public Player(String name) {
+        public Player() : this("") {}
+        public Player(string spriteSheet) : this(spriteSheet, randomName()) {}
+        public Player(string spriteSheet, string name) : base(spriteSheet) {
             Name = name;
+
+            // TODO test
+            BasicAttack = new BasicAttack();
+            BasicAttack.User = this;
 
             // no collision with other players
             CollisionResolver = ((x, y, mos) => {
