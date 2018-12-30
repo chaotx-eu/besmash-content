@@ -37,7 +37,7 @@ namespace BesmashContent {
             base.spawnEntities(); // clears entity list by default
 
             // some example npcs
-            Entity endBoss = new NeutralNPC();
+            Entity endBoss = new Npc();
             endBoss.SpriteSheet = "images/entities/kevin_sheet";
             endBoss.SpriteRectangle = new Rectangle(0, 0, 16, 16);
             endBoss.Facing = Facing.SOUTH;

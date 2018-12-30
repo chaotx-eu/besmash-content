@@ -43,8 +43,8 @@ namespace BesmashContent {
         /// entities on load
         protected override void spawnEntities() {
             base.spawnEntities(); // clears entity list by default
-            Entity donald = new NeutralNPC();
-            Entity dagobert = new NeutralNPC();
+            Entity donald = new Npc();
+            Entity dagobert = new Npc();
             donald.SpriteSheet = "images/entities/kevin_sheet";
             dagobert.SpriteSheet = "images/entities/kevin_sheet";
             donald.SpriteRectangle = new Rectangle(0, 0, 16, 16);

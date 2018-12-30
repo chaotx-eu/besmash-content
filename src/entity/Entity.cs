@@ -1,8 +1,11 @@
-namespace BesmashContent 
-{
+namespace BesmashContent  {
     public enum Facing {NORTH, EAST, SOUTH, WEST}
-    public abstract class Entity : MapObject 
-    {
-        public Facing Facing = Facing.SOUTH;
+    
+    public class Entity : MapObject  {
+        /// The direction this entitiy is facing
+        public Facing Facing {get; set;} = Facing.SOUTH;
+
+        /// The title of this entity
+        public string Title {get; protected set;} = "Entity";
     }
 }
