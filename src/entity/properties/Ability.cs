@@ -64,13 +64,13 @@ namespace BesmashContent {
         public virtual void execute(Point target) {
             IsExecuting = true;
             if(OnChargeAnimation != null) {
-                OnChargeAnimation.Position = User.Position;
+                OnChargeAnimation.Position = User.Target.ToVector2();
                 OnChargeAnimation.Facing = User.Facing;
                 User.ContainingMap.addAnimation(OnChargeAnimation);
             } else if(Projectile != null)
-                fireProjectile(User.Position, User.Facing);
+                fireProjectile(User.Target.ToVector2(), User.Facing);
             else if(OnHitAnimation != null)
-                hitTargets(User.Position, User.Facing);
+                hitTargets(User.Target.ToVector2(), User.Facing);
             else IsExecuting = false;
         }
 
@@ -126,6 +126,10 @@ namespace BesmashContent {
             Targets.ForEach(p => {
                 Point target = MapUtils.rotatePoint(p, facing)
                     + position.ToPoint();
+
+                OnHitAnimation.Facing = facing;
+                OnHitAnimation.Position = target.ToVector2();
+                User.ContainingMap.addAnimation(OnHitAnimation);
 
                 User.ContainingMap
                     .getEntities(target.X, target.Y)
