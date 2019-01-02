@@ -5,7 +5,7 @@ namespace BesmashContent {
         public override void load(ContentManager content) {
             Title = "Attack";
             OnHitAnimation = content.Load<SpriteAnimation>(
-                "objects/animations/sword_animation");
+                "objects/battle/animations/sword_animation");
 
             base.load(content);
         }
@@ -15,8 +15,8 @@ namespace BesmashContent {
             base.onHit(target);
             
             // TODO test
-            if(target == null) OnHitAnimation
-                .start(User.ContainingMap);
+            if(target == null) User.ContainingMap
+                .addAnimation(OnHitAnimation);
         }
     }
 }

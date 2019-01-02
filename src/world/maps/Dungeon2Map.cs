@@ -17,11 +17,11 @@ namespace BesmashContent {
             stairsUp.TileSteppedEvent += (sender, args) => {
                 // define here what should happen when stepped on this tile
                 if(args.Movable == Slave)
-                    loadOther("maps/dungeon1"); // e.g. load another map (map file must exist!)
+                    loadOther("objects/world/mapsdungeon1"); // e.g. load another map (map file must exist!)
             };
             stairsDown.TileSteppedEvent += (sender, args) => {
                 if(args.Movable == Slave)
-                    loadOther("maps/dungeon3");
+                    loadOther("objects/world/mapsdungeon3");
             };
         }
 

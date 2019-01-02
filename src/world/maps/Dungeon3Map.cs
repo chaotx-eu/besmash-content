@@ -16,7 +16,7 @@ namespace BesmashContent {
             stairsUp.TileSteppedEvent += (sender, args) => {
                 // define here what should happen when stepped on this tile
                 if(args.Movable == Slave)
-                    loadOther("maps/dungeon2"); // e.g. load another map (map file must exist!)
+                    loadOther("objects/world/mapsdungeon2"); // e.g. load another map (map file must exist!)
             };
             
         }
@@ -38,7 +38,7 @@ namespace BesmashContent {
 
             // some example npcs
             Entity endBoss = new Npc();
-            endBoss.SpriteSheet = "images/entities/kevin_sheet";
+            endBoss.SpriteSheet = "images/world/entities/npcs/kevin_sheet";
             endBoss.SpriteRectangle = new Rectangle(0, 0, 16, 16);
             endBoss.Facing = Facing.SOUTH;
 

@@ -8,7 +8,7 @@ namespace BesmashContent {
     /// All objects existing in the game universe
     /// inherit from this class.
     [DataContract(IsReference = true)]
-    public class GameObject {
+    public class GameObject : ICloneable {
         /// Source SpriteSheet url.
         [DataMember]
         public string SpriteSheet {get; set;}
@@ -75,6 +75,10 @@ namespace BesmashContent {
             }
 
             return rotated;
+        }
+
+        public object clone() {
+            return MemberwiseClone();
         }
     }
 }

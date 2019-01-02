@@ -15,7 +15,7 @@ namespace BesmashContent {
             cryptDoor.TileSteppedEvent += (sender, args) => {
                 // define here what should happen when stepped on this tile
                 if(args.Movable == Slave)
-                    loadOther("maps/dungeon1"); // e.g. load another map (map file must exist!)
+                    loadOther("objects/world/mapsdungeon1"); // e.g. load another map (map file must exist!)
             };
         }
 
@@ -25,12 +25,12 @@ namespace BesmashContent {
                     => player.Position = new Vector2(45, 16));
             } else if(fromMap == null) { // new game (example)
                 Player[] members = new Player[3];
-                Player leader = new Player("images/entities/grey_sheet");
+                Player leader = new Player("images/wolrd/entities/player/grey_sheet");
 
                 string[] memberSheets = {
-                    "images/entities/pink_sheet",
-                    "images/entities/red_sheet",
-                    "images/entities/white_sheet"
+                    "images/world/entities/player/pink_sheet",
+                    "images/world/entities/player/red_sheet",
+                    "images/world/entities/player/white_sheet"
                 };
 
                 for(int i = -1; i < members.Length; ++i) {
@@ -58,8 +58,8 @@ namespace BesmashContent {
             // some example npcs
             Entity donald = new Npc();
             Entity dagobert = new Npc();
-            donald.SpriteSheet = "images/entities/kevin_sheet";
-            dagobert.SpriteSheet = "images/entities/kevin_sheet";
+            donald.SpriteSheet = "images/world/entities/player/kevin_sheet";
+            dagobert.SpriteSheet = "images/world/entities/player/kevin_sheet";
             donald.SpriteRectangle = new Rectangle(0, 0, 16, 16);
             dagobert.SpriteRectangle = new Rectangle(0, 0, 16, 16);
             donald.Facing = Facing.WEST;

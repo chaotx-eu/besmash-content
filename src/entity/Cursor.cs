@@ -7,27 +7,11 @@ namespace BesmashContent {
 
     public class Cursor : Movable {
         /// Default cursor sprite sheet
-        public static string DEFAULT_CURSOR_SHEET = "images/entities/generic_cursor";
+        public static string DEFAULT_CURSOR_SHEET = "images/world/entities/cursor/generic_cursor";
 
-        /// Default width in pixels of a single sprite
-        /// in a cursor spritesheet
-        public static int DEFAULT_SPRITE_W {get;} = 16;
-
-        /// Default height in pixels of a single sprite
-        /// in a cursor spritesheet
-        public static int DEFAULT_SPRITE_H {get;} = 16;
-
-        /// Default sprite count on horizontal pane
-        public static int DEFAULT_SPRITE_C {get;} = 6;
-
-        /// Default amount of sprites shown per second,
-        /// SpritesPerSecond value divided by 2 is used
-        /// for SpritesPerStep
-        public static int DEFAULT_SPS {get;} = 3;
-
-        [ContentSerializerIgnore]
         /// Wether the object beneath this cursor is considered
         /// selected. Resets back to false on retreival
+        [ContentSerializerIgnore]
         public bool IsSelected {
             get {
                 bool value = isSelected;
@@ -46,8 +30,8 @@ namespace BesmashContent {
             SpriteSheet = spriteSheet;
             SpriteRectangle = new Rectangle(0, 0, DEFAULT_SPRITE_W, DEFAULT_SPRITE_H);
             SpriteCount = DEFAULT_SPRITE_C;
-            SpritesPerSecond = DEFAULT_SPS;
-            SpritesPerStep = SpritesPerSecond/2;
+            SpritesPerSecond = DEFAULT_SPS*2;
+            SpritesPerStep = DEFAULT_SPS;
             StepTime = 200;
             CollisionResolver = (x, y, mo) => {
                 isSelected = false;

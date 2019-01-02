@@ -1,5 +1,6 @@
 namespace BesmashContent {
     using Microsoft.Xna.Framework;
+    using System.Linq;
     using System;
 
     public class Player : Creature {
@@ -7,6 +8,7 @@ namespace BesmashContent {
         public Player(string spriteSheet) : this(spriteSheet, randomName()) {}
         public Player(string spriteSheet, string name) : base(spriteSheet) {
             Name = name;
+            SpritesPerSecond = 4;
 
             // TODO test
             BasicAttack = new BasicAttack();
@@ -22,6 +24,14 @@ namespace BesmashContent {
 
                 return null;
             });
+        }
+
+        // TODO test projectile
+        public override void load(Microsoft.Xna.Framework.Content.ContentManager content) {
+            if(Abilities.Where(a => a.Title == "Fireball").Count() == 0)
+                addAbility(content.Load<Ability>("objects/battle/abilities/fireball_ability"));
+                
+            base.load(content);
         }
 
         // TODO (this is just for fun)

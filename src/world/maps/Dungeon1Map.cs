@@ -17,12 +17,12 @@ namespace BesmashContent {
             cryptExit1.TileSteppedEvent += (sender, args) => {
                 // define here what should happen when stepped on this tile
                 if(args.Movable == Slave)
-                    loadOther("maps/forestMap"); // e.g. load another map (map file must exist!)
+                    loadOther("objects/world/mapsforestMap"); // e.g. load another map (map file must exist!)
             };
             stairsDown.TileSteppedEvent += (sender, args) => {
                 // define here what should happen when stepped on this tile
                 if(args.Movable == Slave)
-                    loadOther("maps/dungeon2"); // e.g. load another map (map file must exist!)
+                    loadOther("objects/world/mapsdungeon2"); // e.g. load another map (map file must exist!)
             };
         }
 
@@ -45,8 +45,8 @@ namespace BesmashContent {
             base.spawnEntities(); // clears entity list by default
             Entity donald = new Npc();
             Entity dagobert = new Npc();
-            donald.SpriteSheet = "images/entities/kevin_sheet";
-            dagobert.SpriteSheet = "images/entities/kevin_sheet";
+            donald.SpriteSheet = "images/world/entities/npcs/kevin_sheet";
+            dagobert.SpriteSheet = "images/world/entities/npcs/kevin_sheet";
             donald.SpriteRectangle = new Rectangle(0, 0, 16, 16);
             dagobert.SpriteRectangle = new Rectangle(0, 0, 16, 16);
             donald.Facing = Facing.WEST;

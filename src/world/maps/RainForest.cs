@@ -1,38 +1,12 @@
 namespace BesmashContent {
     using Microsoft.Xna.Framework;
 
-    public class Forest1Ext : TileMap {
-        public override void init(Game game) {
-            base.init(game);
-            Tile closedDoor = getTile(27, 22, 1);
-            Tile openDoor = getTile(27, 22, 2);
-
-            openDoor.Disabled = true;
-            closedDoor.TileTriggeredEvent += (sender, args) => {
-                if(State == MapState.Roaming && args.Movable == Slave) {
-                    closedDoor.Disabled = true;
-                    openDoor.Disabled = false;
-                }
-            };
-
-            openDoor.TileTriggeredEvent += (sender, args) => {
-                if(State == MapState.Roaming && args.Movable == Slave) {
-                    closedDoor.Disabled = false;
-                    openDoor.Disabled = true;
-                }
-            };
-
-            openDoor.TileSteppedEvent += (sender, args) => {
-                if(State == MapState.Roaming && args.Movable == Slave)
-                    loadOther("objects/world/maps/forest1_int");
-            };
-        }
-
+    public class RainForest : TileMap {
         public override void onLoad(TileMap fromMap, Team team) {
             if(fromMap is Forest1Int) {
                 team.Player.ForEach(player => {
-                    player.Position = new Vector2(27, 22);
-                    player.Facing = Facing.SOUTH;
+                    player.Position = new Vector2(15, 16);
+                    player.Facing = Facing.NORTH;
                 });
             } else if(fromMap == null) { // new game
                 Player[] members = new Player[3];
@@ -46,8 +20,8 @@ namespace BesmashContent {
 
                 for(int i = -1; i < members.Length; ++i) {
                     Player player = i < 0 ? leader : new Player(memberSheets[i]);
-                    player.Position = new Vector2(10-i, 38);
-                    player.Facing = Facing.EAST;
+                    player.Position = new Vector2(15, 16+i);
+                    player.Facing = Facing.NORTH;
                     player.StepTime = 250;
                     if(i >= 0) members[i] = player;
                 };

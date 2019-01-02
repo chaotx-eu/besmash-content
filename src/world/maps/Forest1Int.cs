@@ -6,7 +6,7 @@ namespace BesmashContent {
             base.init(game);
             getTile(11, 15).TileSteppedEvent += (sender, args) => {
                 if(State == MapState.Roaming && args.Movable == Slave)
-                    loadOther("maps/forest1_ext");
+                    loadOther("objects/world/maps/forest1_ext");
             };
         }
 

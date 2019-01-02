@@ -6,31 +6,6 @@ namespace BesmashContent {
     using System.Linq;
     using System;
 
-    /// Custom EventArgs for MoveEvents.
-    public class MoveEventArgs : EventArgs {
-        public Point Position {get;}
-        public Point Target {get;}
-
-        public MoveEventArgs(Point position, Point target) {
-            Position = position;
-            Target = target;
-        }
-    }
-
-    /// Defines the signature of a MoveStartedEvent handler.
-    public delegate void MoveStartedHandler(Movable sender, MoveEventArgs args);
-
-    /// Defines the signature of a MoveFinishedEvent handler.
-    public delegate void MoveFinishedHandler(Movable sender, MoveEventArgs args);
-
-    /// Defines how to react on collision with another MapObject.
-    /// Where distanceX and distanceY are the originally planned
-    /// movement values and others is a list of MapObjects this
-    /// object would collide with. As return value a Point is
-    /// expected representing the new movement values to be taken
-    /// instead or null if nothing should happen (i.e. no collision)
-    public delegate Point? CollisionResolver(int distanceX, int distanceY, List<MapObject> others);
-
     /// An object with the ability to move
     /// over a TileMap.
     public class Movable : Entity {
@@ -48,11 +23,31 @@ namespace BesmashContent {
         /// Default amount of sprites shown per step
         public static int DEFAULT_SPS {get;} = 2;
 
+        /// The amount of different sprites on the horizontal
+        /// pane of the spritesheet. The vertical ammount will
+        /// always be four (0:TOP, 1:EAST, 2:SOUTH, 3:WEST)
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public int SpriteCount {get; set;} = 1;
+
+        /// How many sprites are shown when moving the distance
+        /// of one tile
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public int SpritesPerStep {get; set;} = 1;
+
+        /// Sprite update rate of this movable while
+        /// not moving
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public int SpritesPerSecond {get; set;} = 1;
+
         /// Time in millis this object needs to
         /// move the distance of one Tile. Will be
         /// multiplied with step time multiplier on
         /// retreival
         [DataMember]
+        [ContentSerializer(Optional = true)]
         public int StepTime {
             get {return (int)(stepTime*StepTimeMultiplier);}
             set {stepTime = value;}
@@ -63,26 +58,19 @@ namespace BesmashContent {
         /// StepTime is multiplied with this
         /// value on retreival
         [DataMember]
+        [ContentSerializerIgnore]
         public float StepTimeMultiplier {get; set;} = 1;
 
         /// Holds wether this Movable is currently moving.
         [DataMember]
+        [ContentSerializerIgnore]
         public bool Moving {get; set;}
 
-        /// The amount of different sprites on the horizontal
-        /// pane of the spritesheet. The vertical ammount will
-        /// always be four (0:TOP, 1:EAST, 2:SOUTH, 3:WEST)
+        /// Target coordinate of the tile this objects
+        /// moves to. Is automatically set on move.
         [DataMember]
-        public int SpriteCount {get; set;} = 1;
-
-        /// How many sprites are shown when moving the distance
-        /// of one tile
-        [DataMember]
-        public int SpritesPerStep {get; set;} = 1;
-
-        /// Sprite update rate of this cursor
-        [DataMember]
-        public int SpritesPerSecond {get; set;} = 1;
+        [ContentSerializerIgnore]
+        public Point Target {get; set;}
 
         /// The default collision resolver which is used
         /// in case none is passed to move
@@ -97,11 +85,6 @@ namespace BesmashContent {
         /// will be triggered after this Movable finished moving.
         public event MoveFinishedHandler MoveFinishedEvent;
 
-        /// Target coordinate of the tile this objects
-        /// moves to. Is automatically set on move.
-        [DataMember]
-        public Point Target {get; set;}
-
         /// Initializes a default collision resolver where solid
         /// tiles and entities are unpassable. Behaviour has to be
         /// reimplemented if a different CollisionResolver is used.
@@ -111,14 +94,7 @@ namespace BesmashContent {
             SpriteRectangle = new Rectangle(0, 0, DEFAULT_SPRITE_W, DEFAULT_SPRITE_H);
             SpriteCount = DEFAULT_SPRITE_C;
             SpritesPerStep = DEFAULT_SPS;
-            SpritesPerSecond = DEFAULT_SPS;
-            CollisionResolver = (x, y, mos) => {
-                foreach(MapObject mo in mos)
-                    if(mo is Entity || mo is Tile && ((Tile)mo).Solid)
-                        return Point.Zero;
-
-                return null;
-            };
+            initHandler();
         }
 
         /// Stops any movement immediately.
@@ -126,6 +102,17 @@ namespace BesmashContent {
             Moving = false;
             onMoveFinished(new MoveEventArgs(
                 Position.ToPoint(), Target));
+        }
+
+        /// Moves on tile towards the facing of this movable
+        public void move() {
+            int x = Facing == Facing.EAST ? 1
+                : Facing == Facing.WEST ? -1 : 0;
+
+            int y = Facing == Facing.SOUTH ? 1
+                : Facing == Facing.NORTH ? -1 : 0;
+
+            move(x, y);
         }
 
         /// Moves this object distanceX tiles on the x-axis and
@@ -226,6 +213,19 @@ namespace BesmashContent {
                     idleTimer = 0;
                 }
             }
+        }
+
+        /// Initializes event handler and similiar
+        protected virtual void initHandler() {
+            MoveStartedEvent = null;
+            MoveFinishedEvent = null;
+            CollisionResolver = (x, y, mos) => {
+                foreach(MapObject mo in mos)
+                    if(mo is Entity || mo is Tile && ((Tile)mo).Solid)
+                        return Point.Zero;
+
+                return null;
+            };
         }
 
         private void updateSprite() {

@@ -2,6 +2,7 @@
     using System.Runtime.Serialization;
     using System.Collections.Generic;
     using System.Linq;
+    using System;
 
     using Microsoft.Xna.Framework;
     using Microsoft.Xna.Framework.Graphics;
@@ -16,6 +17,7 @@
     [KnownType(typeof(Dungeon3Map))]
     [KnownType(typeof(Forest1Ext))]
     [KnownType(typeof(Forest1Int))]
+    [KnownType(typeof(RainForest))]
     [DataContract(IsReference = true)]
     public class TileMap {
         /// Possible states a map can be in
@@ -285,14 +287,17 @@
         /// Aligns the map and updates all game object on it.
         public void update(GameTime gameTime) {
             align();
-            foreach(Tile tile in Tiles)
-                if(!tile.Disabled) tile.update(gameTime);
+            int max = Math.Max(Math.Max(Tiles.Count, Entities.Count), Animations.Count);
 
-            foreach(Entity entity in Entities)
-                entity.update(gameTime);
+            for(int i = 0; i < max; ++i) {
+                if(i < Tiles.Count) {
+                    Tile tile = Tiles[i];
+                    if(!tile.Disabled) tile.update(gameTime);
+                }
 
-            for(int i = 0; i < Animations.Count; ++i)
-                Animations[i].update(gameTime);
+                if(i < Entities.Count) Entities[i].update(gameTime);
+                if(i < Animations.Count) Animations[i].update(gameTime);
+            }
         }
 
         /// Draws all game objects on this map.
@@ -300,27 +305,33 @@
         public void draw(SpriteBatch batch) {
             // https://gamedev.stackexchange.com/questions/6820/how-do-i-disable-texture-filtering-for-sprite-scaling-in-xna-4-0
             batch.Begin(SpriteSortMode.FrontToBack, null, SamplerState.PointClamp, null, null, null, null);
+            int max = Math.Max(Math.Max(Tiles.Count, Entities.Count), Animations.Count);
 
-            foreach(Tile tile in Tiles)
-                if(!tile.Disabled && !tile.Hidden)
-                    tile.draw(batch);
+            for(int i = 0; i < max; ++i) {
+                if(i < Tiles.Count) {
+                    Tile tile = Tiles[i];
 
-            foreach(Entity entity in Entities)
-                entity.draw(batch);
+                    if(!tile.Disabled && !tile.Hidden)
+                        tile.draw(batch);
+                }
 
-            foreach(SpriteAnimation animation in Animations)
-                animation.draw(batch);
+                if(i < Entities.Count) Entities[i].draw(batch);
+                if(i < Animations.Count) Animations[i].draw(batch);
+            }
         
             batch.End();
         }
 
-        /// Adds an animation to the map and runs it
+        /// Adds a clone of the passed animation to
+        /// the map and starts it
         public void addAnimation(SpriteAnimation a) {
-            if(!Animations.Contains(a))
-                Animations.Add(a);
+            SpriteAnimation copy = a.clone() as SpriteAnimation;
 
-            a.ContainingMap = this;
-            a.start(this);
+            if(!Animations.Contains(copy))
+                Animations.Add(copy);
+
+            copy.ContainingMap = this;
+            copy.start();
         }
 
         public void addEntity(Entity e) {
