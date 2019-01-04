@@ -11,10 +11,12 @@ namespace BesmashContent {
         }
 
         public override void onLoad(TileMap fromMap, Team team) {
-            team.Player.ForEach(player => {
-                player.Position = new Vector2(11, 15);
-                player.Facing = Facing.NORTH;
-            });
+            if(fromMap is Forest1Ext) {
+                team.Player.ForEach(player => {
+                    player.Position = new Vector2(11, 15);
+                    player.Facing = Facing.NORTH;
+                });
+            }
 
             base.onLoad(fromMap, team);
         }

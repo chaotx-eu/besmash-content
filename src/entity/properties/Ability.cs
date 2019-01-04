@@ -2,54 +2,71 @@ namespace BesmashContent {
     using Microsoft.Xna.Framework;
     using Microsoft.Xna.Framework.Content;
     using System.Collections.Generic;
+    using System.Runtime.Serialization;
     using System.Linq;
     using System;
     using Utility;
-    
+
+    [DataContract(IsReference = true)]
     public class Ability : GameObject {
         /// The title of this ability
+        [DataMember]
         public string Title {get; set;}
 
         /// Path to the file of the OnHitAnimation
+        [DataMember]
         [ContentSerializer(ElementName = "HitAnimation", Optional = true)]
         public string HitAnimationFile {get; set;}
 
         /// Path to the file of the OnChargeAnimation
+        [DataMember]
         [ContentSerializer(ElementName = "ChargeAnimation", Optional = true)]
         public string ChargeAnimationFile {get; set;}
 
         /// Path to the file of the Projectile
+        [DataMember]
         [ContentSerializer(ElementName = "Projectile", Optional = true)]
         public string ProjectileFile {get; set;}
-        
+
+        // TODO modular projectiles
+        // public List<string> ProjectileFiles {get; set;} = new List<string>();
+        // public List<Projectile> Projectiles {get; set;} = new List<Projectile>();
+        // public int ProjectileOffset {get; set;}
+
         /// List of coordinates hit animations should
         /// target, relative to the user facing north
         /// (default = {(0, -1)})
-        [ContentSerializerIgnore] // TODO investigate why Point is not suppurted by Content Reader when a member of this class?!
+        [DataMember]
+        [ContentSerializer(Optional = true)]
         public List<Point> Targets {get; set;}
 
         /// Path to the file of the User creature
-        [ContentSerializer(ElementName = "User", Optional = true)]
-        public string UserFile {get; set;}
+        // [ContentSerializerIgnore]
+        // public string UserFile {get; set;}
 
         /// Animation to be shown on target position
+        [DataMember]
         [ContentSerializerIgnore]
         public SpriteAnimation OnHitAnimation {get; protected set;}
 
         /// Animation to be shown at user position before execution.
         /// The ability wont trigger until this animation has finished
+        [DataMember]
         [ContentSerializerIgnore]
         public SpriteAnimation OnChargeAnimation {get; protected set;}
 
         /// The projectile this ability may uses (can be null)
+        [DataMember]
         [ContentSerializerIgnore]
         public Projectile Projectile {get; protected set;}
 
         /// User of this ability (make sure this is set)
+        [DataMember]
         [ContentSerializerIgnore]
         public Creature User {get; set;}
 
         /// Wether this ability is currently executed
+        [DataMember]
         [ContentSerializerIgnore]
         public bool IsExecuting {get; protected set;}
 

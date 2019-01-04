@@ -8,6 +8,7 @@ namespace BesmashContent {
 
     /// An object with the ability to move
     /// over a TileMap.
+    [DataContract]
     public class Movable : Entity {
         /// Default width in pixels of a single sprite
         /// in a creature spritesheet

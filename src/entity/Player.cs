@@ -26,14 +26,6 @@ namespace BesmashContent {
             });
         }
 
-        // TODO test projectile
-        public override void load(Microsoft.Xna.Framework.Content.ContentManager content) {
-            if(Abilities.Where(a => a.Title == "Fireball").Count() == 0)
-                addAbility(content.Load<Ability>("objects/battle/abilities/fireball_ability"));
-                
-            base.load(content);
-        }
-
         // TODO (this is just for fun)
         public static Random PlayerRNG = new Random();
         public static string[] SourceNames {get;} = {
