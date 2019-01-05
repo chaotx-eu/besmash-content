@@ -56,6 +56,19 @@ namespace BesmashContent {
         [DataMember]
         private int frameOffset;
 
+        /// Wether this components animation should stick
+        /// to its ability users position (default true)
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public bool StickyPosition {get; set;}
+
+        /// Wether this components animation should stick
+        /// to its ability users rotation, has no effect
+        /// if RotateRelative is set to false (default true)
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public bool StickyRotation {get; set;}
+
         /// A list of child ability components which will
         /// be executed alongside this one
         [DataMember]
@@ -111,6 +124,8 @@ namespace BesmashContent {
         /// values with default 
         public AbilityComponent() {
             Children = new List<AbilityComponent>();
+            StickyPosition = true;
+            StickyRotation = true;
         }
 
         /// Loads any required ressources for this components
@@ -141,11 +156,8 @@ namespace BesmashContent {
             if(Animation != null && animationReady) {
                 animationReady = false;
                 Ability.User.ContainingMap.addAnimation(animation, true);
-
-                if(Animation.RotateRelative) {
-                    int faceDiff = (int)animation.Facing - (int)Ability.User.Facing;
-                    animation.Rotation = ((4 - faceDiff)%4)*90;
-                }
+                updateAnimationPosition();
+                updateAnimationRotation();
             }
 
             if(Projectile != null && projectileReady) {
@@ -171,7 +183,18 @@ namespace BesmashContent {
                 else activeList.RemoveAt(i);
             }
 
-            if(Animation != null) framer = animation.CurrentFrame;
+            if(Animation != null) {
+                framer = animation.CurrentFrame;
+
+                if(animation.IsRunning) {
+                    if(StickyPosition)
+                        updateAnimationPosition();
+
+                    if(StickyRotation)
+                        updateAnimationRotation();
+                }
+            }
+
             if(waitList.Count == 0 && activeList.Count == 0
             && (Animation == null || !animation.IsRunning)
             && (Projectile == null || projectile.ContainingMap == null))
@@ -187,14 +210,6 @@ namespace BesmashContent {
             IsExecuting = true;
 
             if(Animation != null) {
-                Animation.Position = Ability.User.Position + (
-                    Parent != null ? MapUtils.rotatePoint(
-                        Parent.Position + Position,
-                        Ability.User.Facing)
-                    : MapUtils.rotatePoint(Position, Ability.User.Facing)
-                ).ToVector2();
-
-                // Animation.Facing = Ability.User.Facing; // TODO not sure what this was meant to do
                 animation = Animation.clone() as SpriteAnimation;
                 animationReady = true;
             }
@@ -214,6 +229,7 @@ namespace BesmashContent {
             }
         }
 
+        /// Creates and returns a deep clone of this component
         public object clone() {
             AbilityComponent copy = MemberwiseClone() as AbilityComponent;
             List<AbilityComponent> children = new List<AbilityComponent>();
@@ -230,6 +246,24 @@ namespace BesmashContent {
 
             copy.Children = children;
             return copy;
+        }
+
+        /// Updates the position of the animation
+        private void updateAnimationPosition() {
+            animation.Position = Ability.User.Position + (
+                Parent != null ? MapUtils.rotatePoint(
+                    Parent.Position + Position,
+                    Ability.User.Facing)
+                : MapUtils.rotatePoint(Position, Ability.User.Facing)
+            ).ToVector2();
+        }
+
+        /// Updates the rotation of the animation
+        private void updateAnimationRotation() {
+            if(Animation.RotateRelative) {
+                int faceDiff = (int)animation.Facing - (int)Ability.User.Facing;
+                animation.Rotation = ((4 - faceDiff)%4)*90;
+            }
         }
     }
 }
