@@ -4,19 +4,15 @@ namespace BesmashContent {
     using Microsoft.Xna.Framework.Content;
 
     public class Projectile : Movable {
-        /// Path to the collision animation file
-        [ContentSerializer(ElementName = "CollisionAnimation")]
-        public string CollisionAnimationFile {get; set;}
+        /// Ability which is executed on collision
+        /// relative to the position of the projectile
+        [ContentSerializer(Optional = true)]
+        public Ability HitAbility {get; set;}
 
         /// Max tiles this projectile may travel
         /// before it will be removed from the map
         [ContentSerializer(Optional = true)]
         public int MaxDistance {get; set;} = 32;
-
-        /// Animation to be shown on a collision
-        // public SpriteAnimation CollisionAnimation {get; set;}
-        [ContentSerializerIgnore]
-        public SpriteAnimation CollisionAnimation {get; protected set;}
 
         /// Handler for when a projectile starts moving on a map
         public event EventHandler ProjectileStartedEvent;
@@ -25,22 +21,20 @@ namespace BesmashContent {
         public event EventHandler ProjectileRemovedEvent;
 
         private int distanceTraveled;
+        private bool collided;
 
         public Projectile() : this("") {}
         public Projectile(string spriteSheet) : base(spriteSheet) {
             initHandler();
         }
 
-        /// Loads required resources for this projectile
-        /// and its collision animation
+        /// Loads required resources for this
+        /// projectile and its hit ability
         public override void load(ContentManager content) {
             base.load(content);
-   
-            if(CollisionAnimation != null)
-                CollisionAnimation.load(content);
-            else if(CollisionAnimationFile != null)
-                CollisionAnimation = content
-                    .Load<SpriteAnimation>(CollisionAnimationFile);
+
+            if(HitAbility != null)
+                HitAbility.load(content);
         }
 
         /// Starts moving this projectile towards its
@@ -67,8 +61,10 @@ namespace BesmashContent {
 
             CollisionResolver = (x, y, mos) => {
                 foreach(MapObject mo in mos) if(mo is Creature
-                || (mo is Tile) && ((Tile)mo).Solid)
+                || (mo is Tile) && ((Tile)mo).Solid) {
                     onCollision(mo);
+                    return Point.Zero;
+                }
 
                 // TODO test acceleration
                 StepTimeMultiplier -= StepTimeMultiplier/8f;
@@ -76,9 +72,29 @@ namespace BesmashContent {
             };
         }
 
+        /// Updates this projectile and the hit ability
+        /// after a collision
+        public override void update(GameTime gameTime) {
+            base.update(gameTime);
+
+            if(collided) {
+                if(HitAbility == null || !HitAbility.IsExecuting) {
+                    ContainingMap.removeEntity(this);
+                    onProjectileRemoved();
+                } else if(HitAbility != null)
+                    HitAbility.update(gameTime);
+            }
+        }
+
         /// Overrides clone to reinitialize event handler
         public new object clone() {
             Projectile projectile = base.clone() as Projectile;
+
+            if(HitAbility != null) {
+                projectile.HitAbility = HitAbility.clone() as Ability;
+                projectile.HitAbility.User = projectile;
+            }
+
             projectile.initHandler();
             return projectile;
         }
@@ -92,18 +108,16 @@ namespace BesmashContent {
                 SpriteRectangle.Width,
                 SpriteRectangle.Height);
         }
-
+        
         /// Gets called when this projectile collides with
         /// another map object considered solid
         protected virtual void onCollision(MapObject target) {
             if(ContainingMap != null) {
-                if(CollisionAnimation != null && target != null) {
-                    CollisionAnimation.Position = target.Position;
-                    ContainingMap.addAnimation(CollisionAnimation);
-                }
+                if(HitAbility != null)
+                    HitAbility.execute();
 
-                ContainingMap.removeEntity(this);
-                onProjectileRemoved();
+                Color = Color.Transparent; // hide projectile
+                collided = true;
             }
         }
 

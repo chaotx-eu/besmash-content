@@ -11,6 +11,7 @@
 
     [KnownType(typeof(Player))]
     [KnownType(typeof(Cursor))]
+    [KnownType(typeof(Projectile))]
     [KnownType(typeof(ForestMap))]
     [KnownType(typeof(Dungeon1Map))]
     [KnownType(typeof(Dungeon2Map))]
@@ -325,13 +326,21 @@
         /// Adds a clone of the passed animation to
         /// the map and starts it
         public void addAnimation(SpriteAnimation a) {
-            SpriteAnimation copy = a.clone() as SpriteAnimation;
+            addAnimation(a, false);
+        }
 
-            if(!Animations.Contains(copy))
-                Animations.Add(copy);
+        /// Adds an animition to this map and starts it.
+        /// If reference is set to true the passed reference
+        /// will be added otherwise a clone of it
+        public void addAnimation(SpriteAnimation a, bool reference) {
+            SpriteAnimation animation = reference ? a
+                : a.clone() as SpriteAnimation;
 
-            copy.ContainingMap = this;
-            copy.start();
+            if(!Animations.Contains(animation))
+                Animations.Add(animation);
+
+            animation.ContainingMap = this;
+            animation.start();
         }
 
         public void addEntity(Entity e) {

@@ -5,7 +5,7 @@ namespace BesmashContent {
     using Microsoft.Xna.Framework.Content;
 
     [DataContract]
-    public class SpriteAnimation : MapObject {
+    public class SpriteAnimation : MapObject, ICloneable {
         /// Total amount of sprites per row in this animation
         [DataMember]
         public int SpriteCount {get; set;}
@@ -29,28 +29,22 @@ namespace BesmashContent {
         [ContentSerializer(Optional = true)]
         public int MaxIterations {get; set;}
 
-        /// Path to the follow up animation file
+        /// Indicates that this animations sprites should be
+        /// rotated relative to the facing of another map
+        /// object (e.g. the user of an ability)
         [DataMember]
-        [ContentSerializer(ElementName = "FollowUpAnimation", Optional = true)]
-        public string FollowUpAnimationFile {get; set;}
+        [ContentSerializer(Optional = true)]
+        public bool RotateRelative {get; set;}
 
-        /// An animation that is started once this finished
+        /// The current iteration of this animation
         [DataMember]
         [ContentSerializerIgnore]
-        public SpriteAnimation FollowUpAnimation {get; set;}
+        public int Iterations {get; protected set;}
 
-        /// Animations may have a facing applied to them.
-        /// This will have no effect on the sprite image
-        /// use Rotate instead
+        /// The column index of the currently selected frame
         [DataMember]
         [ContentSerializerIgnore]
-        public Facing Facing {get; set;}
-
-        /// The amount of iterations since this animation
-        /// started (in case this value was not modified)
-        [DataMember]
-        [ContentSerializerIgnore]
-        public int Iterations {get; set;}
+        public int CurrentFrame {get; protected set;}
 
         /// Wether this animation is currently running
         [DataMember]
@@ -69,22 +63,9 @@ namespace BesmashContent {
         public void start() {
             if(ContainingMap != null) {
                 SpriteRectangle = new Rectangle(0, SpriteRow*SpriteSize.Y, SpriteSize.X, SpriteSize.Y);
-                column = timer = 0;
+                CurrentFrame = column = timer = 0;
                 IsRunning = true;
                 onAnimationStarted();
-            }
-        }
-
-        /// Loads required resources for this animation
-        /// and its follow up animation if defined
-        public override void load(ContentManager content) {
-            base.load(content);
-
-            if(FollowUpAnimationFile != null) {
-                FollowUpAnimation = content
-                    .Load<SpriteAnimation>(FollowUpAnimationFile);
-
-                FollowUpAnimation.load(content);
             }
         }
 
@@ -105,13 +86,9 @@ namespace BesmashContent {
         /// and the amount of iterations is greater
         /// than the allowed max iterations
         protected virtual void nextFrame() {
+            ++CurrentFrame;
             if(++column >= SpriteCount) {
                 if(++Iterations > MaxIterations && MaxIterations >= 0) {
-                    if(FollowUpAnimation != null) {
-                        FollowUpAnimation.Position = Position;
-                        ContainingMap.addAnimation(FollowUpAnimation);  
-                    }
-
                     ContainingMap.Animations.Remove(this);
                     ContainingMap = null;
                     IsRunning = false;

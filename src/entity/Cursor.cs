@@ -71,7 +71,7 @@ namespace BesmashContent {
         }
 
         protected override void updateSprite(bool reset) {
-            Facing = Facing.NORTH;
+            Facing = Facing.North;
             base.updateSprite(false);
         }
     }

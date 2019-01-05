@@ -4,6 +4,7 @@ namespace BesmashContent {
     using Microsoft.Xna.Framework;
     using Microsoft.Xna.Framework.Graphics;
     using Microsoft.Xna.Framework.Content;
+    using Utility;
 
     /// All objects existing in the game universe
     /// inherit from this class.
@@ -53,29 +54,13 @@ namespace BesmashContent {
                 SpriteRectangle.Width/2f,
                 SpriteRectangle.Height/2f);
                 
-            batch.Draw(sheet, rotateRectangle(DestinationRectangle, (int)Rotation),
+            batch.Draw(sheet, MapUtils.rotateRectangle(DestinationRectangle, (int)Rotation),
                 SpriteRectangle, Color*TileMap.MapAlpha, Rotation*(float)Math.PI/180f,
                 origin, SpriteEffects.None, Layer);
         }
         
         /// Updates this object.
         public virtual void update(GameTime gameTime) {}
-
-        // TODO move to own libary (BesmashUtil?)
-        private Rectangle rotateRectangle(Rectangle rectangle, int rotation) {
-            Rectangle rotated = rectangle;
-            rotated.X += rectangle.Width/2;
-            rotated.Y += rectangle.Height/2;
-
-            // TODO -> temporary solution: will not work properly
-            // for rotations other than 0°, 90°, 180°, 270* or 360°
-            if(rotation == 90 || rotation == 270) {
-                rotated.Width = rectangle.Height;
-                rotated.Height = rectangle.Width;
-            }
-
-            return rotated;
-        }
 
         public object clone() {
             return MemberwiseClone();

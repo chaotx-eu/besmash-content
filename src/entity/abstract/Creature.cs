@@ -34,10 +34,6 @@ namespace BesmashContent {
         [DataMember]
         public Stats Stats {get; protected set;}
 
-        /// Basic attack of this creature
-        [DataMember]
-        public BasicAttack BasicAttack {get; protected set;}
-
         /// Abilities this creature is capable of
         [DataMember]
         public List<Ability> Abilities {get; protected set;}
@@ -51,13 +47,11 @@ namespace BesmashContent {
         public override void load(ContentManager content) {
             base.load(content);
             Abilities.ForEach(a => a.load(content));
-            if(BasicAttack != null) BasicAttack.load(content);
         }
 
         /// Adds an preloaded ability to this
         /// creatures ability list
         public void addAbility(Ability ability) {
-            // if(IsLoaded) ability.load(ContainingMap.Content);
             ability.User = this;
             Abilities.Add(ability);
         }
@@ -78,9 +72,6 @@ namespace BesmashContent {
 
             Abilities.Where(a => a.IsExecuting)
                 .ToList().ForEach(a => a.update(gameTime));
-
-            if(BasicAttack != null && BasicAttack.IsExecuting)
-                BasicAttack.update(gameTime);
         }
     }
 }

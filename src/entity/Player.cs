@@ -10,15 +10,11 @@ namespace BesmashContent {
             Name = name;
             SpritesPerSecond = 4;
 
-            // TODO test
-            BasicAttack = new BasicAttack();
-            BasicAttack.User = this;
-
             // no collision with other players
             CollisionResolver = ((x, y, mos) => {
                 foreach(MapObject mo in mos) {
                     if(mo is Tile && ((Tile)mo).Solid
-                    || mo is Entity && !(mo is Player))
+                    || mo is Creature && !(mo is Player))
                         return Point.Zero;
                 }
 

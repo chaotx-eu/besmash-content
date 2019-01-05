@@ -6,7 +6,7 @@ namespace BesmashContent {
             if(fromMap is Forest1Int) {
                 team.Player.ForEach(player => {
                     player.Position = new Vector2(15, 16);
-                    player.Facing = Facing.NORTH;
+                    player.Facing = Facing.North;
                 });
             } else if(fromMap == null) { // new game
                 Player[] members = new Player[3];
@@ -21,7 +21,7 @@ namespace BesmashContent {
                 for(int i = -1; i < members.Length; ++i) {
                     Player player = i < 0 ? leader : new Player(memberSheets[i]);
                     player.Position = new Vector2(15, 16+i);
-                    player.Facing = Facing.NORTH;
+                    player.Facing = Facing.North;
                     player.StepTime = 250;
                     if(i >= 0) members[i] = player;
                 };

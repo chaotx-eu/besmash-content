@@ -49,8 +49,8 @@ namespace BesmashContent {
             dagobert.SpriteSheet = "images/world/entities/npcs/kevin_sheet";
             donald.SpriteRectangle = new Rectangle(0, 0, 16, 16);
             dagobert.SpriteRectangle = new Rectangle(0, 0, 16, 16);
-            donald.Facing = Facing.WEST;
-            dagobert.Facing = Facing.SOUTH;
+            donald.Facing = Facing.West;
+            dagobert.Facing = Facing.South;
 
             // position auf der map
             donald.Position = new Vector2(68, 60);

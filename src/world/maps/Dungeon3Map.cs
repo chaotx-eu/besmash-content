@@ -40,7 +40,7 @@ namespace BesmashContent {
             Entity endBoss = new Npc();
             endBoss.SpriteSheet = "images/world/entities/npcs/kevin_sheet";
             endBoss.SpriteRectangle = new Rectangle(0, 0, 16, 16);
-            endBoss.Facing = Facing.SOUTH;
+            endBoss.Facing = Facing.South;
 
             // position auf der map
             endBoss.Position = new Vector2(49, 32);

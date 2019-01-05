@@ -15,18 +15,34 @@ namespace BesmashContent.Utility {
         public static Point rotatePoint(Point point, Facing facing) {
             Point rotated;
             switch(facing) {
-                case(Facing.EAST):
+                case(Facing.East):
                     rotated = new Point(-point.Y, point.X);
                     break;
-                case(Facing.SOUTH):
+                case(Facing.South):
                     rotated = new Point(-point.X, -point.Y);
                     break;
-                case(Facing.WEST):
+                case(Facing.West):
                     rotated = new Point(point.Y, -point.X);
                     break;
                 default:
                     rotated = point;
                     break;
+            }
+
+            return rotated;
+        }
+
+        /// Rotates a rectangle and returns the result
+        public static Rectangle rotateRectangle(Rectangle rectangle, int rotation) {
+            Rectangle rotated = rectangle;
+            rotated.X += rectangle.Width/2;
+            rotated.Y += rectangle.Height/2;
+
+            // TODO -> temporary solution: will not work properly
+            // for rotations other than 0°, 90°, 180°, 270* or 360°
+            if(rotation == 90 || rotation == 270) {
+                rotated.Width = rectangle.Height;
+                rotated.Height = rectangle.Width;
             }
 
             return rotated;

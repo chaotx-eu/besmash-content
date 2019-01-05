@@ -6,6 +6,15 @@ namespace BesmashContent {
     using System;
     using System.Runtime.Serialization;
 
+    /// Possible facings on a tile map
+    [DataContract]
+    public enum Facing {
+        [EnumMember(Value = "North")] North,
+        [EnumMember(Value = "East")] East,
+        [EnumMember(Value = "Sout")] South,
+        [EnumMember(Value = "West")] West
+    }
+
     /// Game objects which can be present on a map.
     [DataContract(IsReference = true)]
     public class MapObject : GameObject {
@@ -19,6 +28,11 @@ namespace BesmashContent {
             get {return new Point((int)Position.X, (int)Position.Y);}
             set {Position = new Vector2(value.X, value.Y);}
         }
+
+        /// The direction this map object is facing
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public Facing Facing {get; set;}
 
         /// The map this object is contained by
         [DataMember]

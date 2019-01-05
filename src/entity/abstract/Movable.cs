@@ -26,7 +26,7 @@ namespace BesmashContent {
 
         /// The amount of different sprites on the horizontal
         /// pane of the spritesheet. The vertical ammount will
-        /// always be four (0:TOP, 1:EAST, 2:SOUTH, 3:WEST)
+        /// always be four (0:North, 1:East, 2:South, 3:West)
         [DataMember]
         [ContentSerializer(Optional = true)]
         public int SpriteCount {get; set;} = 1;
@@ -107,11 +107,11 @@ namespace BesmashContent {
 
         /// Moves on tile towards the facing of this movable
         public void move() {
-            int x = Facing == Facing.EAST ? 1
-                : Facing == Facing.WEST ? -1 : 0;
+            int x = Facing == Facing.East ? 1
+                : Facing == Facing.West ? -1 : 0;
 
-            int y = Facing == Facing.SOUTH ? 1
-                : Facing == Facing.NORTH ? -1 : 0;
+            int y = Facing == Facing.South ? 1
+                : Facing == Facing.North ? -1 : 0;
 
             move(x, y);
         }
@@ -132,10 +132,10 @@ namespace BesmashContent {
                 // TODO sprite is updated with delay
                 //      when turning, not sure why
                 Facing = distanceY > 0
-                    ? Facing.SOUTH : distanceY < 0
-                    ? Facing.NORTH : distanceX > 0
-                    ? Facing.EAST : distanceX < 0
-                    ? Facing.WEST : Facing;
+                    ? Facing.South : distanceY < 0
+                    ? Facing.North : distanceX > 0
+                    ? Facing.East : distanceX < 0
+                    ? Facing.West : Facing;
 
                 int positionX = (int)Position.X;
                 int positionY = (int)Position.Y;
