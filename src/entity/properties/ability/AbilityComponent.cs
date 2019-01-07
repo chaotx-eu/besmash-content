@@ -3,6 +3,7 @@ namespace BesmashContent {
     using Microsoft.Xna.Framework.Content;
     using System.Collections.Generic;
     using System.Runtime.Serialization;
+    using System.Linq;
     using System;
     using Utility;
 
@@ -68,6 +69,12 @@ namespace BesmashContent {
         [DataMember]
         [ContentSerializer(Optional = true)]
         public bool StickyRotation {get; set;}
+
+        /// An effect which is attached to creatures on
+        /// the same tile as this component on execution
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public AbilityEffect Effect {get; set;}
 
         /// A list of child ability components which will
         /// be executed alongside this one
@@ -156,8 +163,6 @@ namespace BesmashContent {
             if(Animation != null && animationReady) {
                 animationReady = false;
                 Ability.User.ContainingMap.addAnimation(animation, true);
-                updateAnimationPosition();
-                updateAnimationRotation();
             }
 
             if(Projectile != null && projectileReady) {
@@ -211,10 +216,28 @@ namespace BesmashContent {
 
             if(Animation != null) {
                 animation = Animation.clone() as SpriteAnimation;
+                updateAnimationPosition();
+                updateAnimationRotation();
+                animation.ContainingMap = Ability.User.ContainingMap;
                 animationReady = true;
+
+                // TODO test attached effect
+                if(Effect != null) animation.ContainingMap
+                    .getEntities(animation.Position.ToPoint())
+                    .Where(e => e is Creature).Cast<Creature>()
+                    // .ToList().ForEach(c => Effect.attach(
+                    //     Ability.User as Creature, c));
+                    // TODO crashes for user type == Projectile (hotfix below)
+                    .ToList().ForEach(c => {
+                        MapObject user = Ability.User is Projectile
+                            ? ((Projectile)Ability.User).User : Ability.User;
+
+                        Effect.attach(user as Creature, c);
+                    });
             }
 
             if(Projectile != null) {
+                Projectile.User = Ability.User as Creature; // TODO causes trouble for non creature types
                 Projectile.Position = Ability.User.Position + (
                     Parent != null ? MapUtils.rotatePoint(
                         Parent.Position + Position,

@@ -9,10 +9,10 @@ namespace BesmashContent {
     /// Possible facings on a tile map
     [DataContract]
     public enum Facing {
-        [EnumMember(Value = "North")] North,
-        [EnumMember(Value = "East")] East,
-        [EnumMember(Value = "Sout")] South,
-        [EnumMember(Value = "West")] West
+        [EnumMember] North,
+        [EnumMember] East,
+        [EnumMember] South,
+        [EnumMember] West
     }
 
     /// Game objects which can be present on a map.

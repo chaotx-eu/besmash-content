@@ -14,6 +14,10 @@ namespace BesmashContent {
         [ContentSerializer(Optional = true)]
         public int MaxDistance {get; set;} = 32;
 
+        /// Reference to the source of this projectile
+        [ContentSerializerIgnore]
+        public Creature User {get; set;}
+
         /// Handler for when a projectile starts moving on a map
         public event EventHandler ProjectileStartedEvent;
 

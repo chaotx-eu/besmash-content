@@ -14,6 +14,11 @@ namespace BesmashContent {
         [DataMember]
         public string SpriteSheet {get; set;}
 
+        /// Path to thumbnail image
+        [DataMember]
+        [ContentSerializer(ElementName = "Thumbnail", Optional = true)]
+        public string ThumbnailFile {get; set;}
+
         /// Sprite Rectangle in SpriteSheet.
         [DataMember]
         [ContentSerializer(Optional = true)]
@@ -40,11 +45,23 @@ namespace BesmashContent {
         public Color Color {get; set;} = Color.White;
 
         /// Reference to SpriteSheet image
-        private Texture2D sheet;
+        [ContentSerializerIgnore]
+        public Texture2D Image {get; protected set;}
+
+        /// Reference to thumbnail image
+        [ContentSerializerIgnore]
+        public Texture2D Thumbnail {get; set;}
 
         /// Loads required resources for this object
         public virtual void load(ContentManager content) {
-            sheet = content.Load<Texture2D>(SpriteSheet);
+            // TODO overthink conditions
+            // if(Image == null && SpriteSheet != null)
+            if(SpriteSheet != null)
+                Image = content.Load<Texture2D>(SpriteSheet);
+
+            // if(ThumbnailFile != null && Thumbnail == null)
+            if(ThumbnailFile != null)
+                Thumbnail = content.Load<Texture2D>(ThumbnailFile);
         }
 
         /// Draws this object to the screen.
@@ -54,7 +71,7 @@ namespace BesmashContent {
                 SpriteRectangle.Width/2f,
                 SpriteRectangle.Height/2f);
                 
-            batch.Draw(sheet, MapUtils.rotateRectangle(DestinationRectangle, (int)Rotation),
+            batch.Draw(Image, MapUtils.rotateRectangle(DestinationRectangle, (int)Rotation),
                 SpriteRectangle, Color*TileMap.MapAlpha, Rotation*(float)Math.PI/180f,
                 origin, SpriteEffects.None, Layer);
         }

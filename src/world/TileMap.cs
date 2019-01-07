@@ -269,7 +269,7 @@
         }
 
         /// Loads all for this map required assets
-        /// into memory.
+        /// into memory (TODO does not need to be virtual)
         public void load(ContentManager content) {
             foreach(Tile tile in Tiles) tile.load(content);
             foreach(Entity entity in Entities) entity.load(content);
@@ -359,22 +359,42 @@
             }
         }
 
+        public Tile getTile(Point pos) {
+            return getTile(pos.X, pos.Y);
+        }
+
         public Tile getTile(int x, int y) {
             return getTile(x, y, false);
+        }
+
+        public Tile getTile(Point pos, bool top) {
+            return getTile(pos.X, pos.Y, top);
         }
 
         public Tile getTile(int x, int y, bool top) {
             return getTile(x, y, top ? maxLayer : minLayer);
         }
 
+        public Tile getTile(Point pos, int z) {
+            return getTile(pos.X, pos.Y, z);
+        }
+
         public Tile getTile(int x, int y, int z) {
             return tileDict[x+"|"+y+"|"+z];
+        }
+
+        public List<Tile> getTiles(Point pos) {
+            return getTiles(pos.X, pos.Y);
         }
 
         public List<Tile> getTiles(int x, int y) {
             return tileDict.Values.Where(t =>
                 t.Position.X == x && !t.Disabled &&
                 t.Position.Y == y).ToList();
+        }
+
+        public List<Entity> getEntities(Point pos) {
+            return getEntities(pos.X, pos.Y);
         }
 
         public List<Entity> getEntities(int x, int y) {
