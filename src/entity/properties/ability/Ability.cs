@@ -16,6 +16,11 @@ namespace BesmashContent {
         [ContentSerializer(Optional = true)]
         public string Title {get; set;}
 
+        /// The ap required to execute this ability
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public int APCost {get; set;}
+
         /// List of root components this ability is made of
         [DataMember]
         [ContentSerializer(CollectionItemName = "Component")]
@@ -30,6 +35,30 @@ namespace BesmashContent {
         [DataMember]
         [ContentSerializerIgnore]
         public bool IsExecuting {get; protected set;}
+
+        /// Returns a list of all points relative to the
+        /// user position this abilities components will
+        /// be executed on
+        public List<Point> getTargetSpots() {
+            List<Point> targets = new List<Point>();
+            Components.ForEach(c => getTargets(c, targets));
+            return targets;
+        }
+
+        /// Helper to for getting target spots traversing
+        /// recursivly through the components
+        private void getTargets(AbilityComponent component, List<Point> targets) {
+            AbilityComponent comp = component;
+            Point pos = Point.Zero;
+
+            while(comp != null) {
+                pos += comp.Position;
+                comp = comp.Parent;
+            }
+
+            targets.Add(pos);
+            component.Children.ForEach(c => getTargets(c, targets));
+        }
 
         /// Executes this ability
         public virtual void execute() {
@@ -54,6 +83,8 @@ namespace BesmashContent {
                 component => component.update(gameTime));
         }
 
+        /// Creates and returns a clone of this ability
+        /// where the components are deep clones
         public object clone() {
             Ability copy = MemberwiseClone() as Ability;
             AbilityComponent component;

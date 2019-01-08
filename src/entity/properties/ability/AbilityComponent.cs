@@ -29,6 +29,15 @@ namespace BesmashContent {
         [ContentSerializer(Optional = true)]
         public Point Position {get; set;}
 
+        // TODO change Position => selected position for execution
+        /// List of positions relative to the parent component
+        /// or in case there is none to the ability user this
+        /// component may be executed on
+        /// not sure if i like it :?
+        // [DataMember]
+        // [ContentSerializer(Optional = true)]
+        // public List<Point> Positions {get; set;}
+
         /// The time in millisecond this component is
         /// executed after its parent has shown exactly or
         /// more than FrameOffset frames. If no parent exists

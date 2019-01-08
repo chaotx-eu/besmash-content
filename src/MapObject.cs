@@ -53,6 +53,12 @@ namespace BesmashContent {
                 ContainingMap.TileHeight);
         }
 
+        /// Checks for line of sight at the absolute point
+        /// containing map from the current position
+        public bool canSee(Point pos) {
+            return canSee(pos.X, pos.Y);
+        }
+
         /// Checks wether there is line of sight from the current
         /// position to the desired spot on the containing map.
         public bool canSee(int x, int y) {
