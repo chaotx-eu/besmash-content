@@ -40,7 +40,7 @@ namespace BesmashContent {
 
         /// Override this method to spawn and add
         /// entities on load
-        protected override void spawnEntities() {
+        public override void spawnEntities() {
             base.spawnEntities(); // clears entity list by default
 
             // some example npcs

@@ -10,6 +10,7 @@
     using Microsoft.Xna.Framework.Content;
 
     [KnownType(typeof(Player))]
+    [KnownType(typeof(Enemy))]
     [KnownType(typeof(Cursor))]
     [KnownType(typeof(Projectile))]
     [KnownType(typeof(ForestMap))]
@@ -56,6 +57,19 @@
             }
         }
 
+        /// The amount of npcs that are allowd to spawn
+        /// on this map where the value will be randomly
+        /// chosen between X and Y (both inclusive)
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public Point SpawnCount {get; set;}
+
+        /// List of spawn points which determine what
+        /// npcs where spawn when this map is loaded
+        [DataMember]
+        [ContentSerializer(CollectionItemName = "SpawnPoint", Optional = true)]
+        public List<SpawnPoint> SpawnPoints {get; set;}
+
         /// List of Tiles this map is made of.
         [DataMember]
         [ContentSerializer(CollectionItemName = "Tile")]
@@ -100,7 +114,7 @@
         /// The state of this map
         [DataMember]
         [ContentSerializerIgnore]
-        public MapState State {get; private set;} = MapState.Roaming;
+        public MapState State {get; private set;}
 
         /// Width of this map in tiles. Equal
         /// to the x-coord of any Tile furthest
@@ -158,9 +172,17 @@
             private set {otherMap = value;}
         }
 
-        // Reference to the Cursor of this Map
+        /// Reference to the Cursor of this Map
         [ContentSerializerIgnore]
         public Cursor Cursor {get; private set;} = new Cursor();
+
+        /// Content manager of this map
+        [ContentSerializerIgnore]
+        public ContentManager Content {get; protected set;}
+
+        /// Random number generator of this map
+        [ContentSerializerIgnore]
+        public Random RNG {get; protected set;}
 
         private string otherMap = null;
         private Point viewport = new Point(4, 4);
@@ -175,13 +197,14 @@
         private int x, y;
 
         public TileMap() {
+            RNG = new Random();
             Cursor.ContainingMap = this;
         }
 
         /// This method is called after the map is loaded
         /// with the previous map and active team as parameter
         public virtual void onLoad(TileMap fromMap, Team team) {
-            spawnEntities();
+            // spawnEntities(); // TODO onLoad is deprecated  
             team.Player.ForEach(player => {
                 if(fromMap != null)
                     fromMap.removeEntity(player);
@@ -195,9 +218,60 @@
         }
 
         /// Override this method to spawn and add
-        /// entities on load
-        protected virtual void spawnEntities() {
-            Entities.Clear();
+        /// entities on load (TODO does not need be virtual)
+        public virtual void spawnEntities() {
+            // Entities.Clear(); // hm (TODO does not really belong here)
+            if(SpawnPoints == null) return;
+
+            // TODO (new spawning system)
+            List<SpawnPoint> spawnPoints;
+            int count = RNG.Next(SpawnCount.X, SpawnCount.Y+1);
+            int s = 0, i;
+
+            // spawns with negative weight in prioritized order
+            spawnPoints = SpawnPoints
+                .Where(sp => sp.Weight < 0).ToList();
+
+            spawnPoints.OrderByDescending(sp => sp.Weight).ToList().ForEach(p => {
+                if(s >= count) return;
+                if(spawnAt(p)) ++s;
+            });
+
+            // spawns with positive weight in no particular order (but weighted)
+            spawnPoints.Clear();
+            SpawnPoints.Where(sp => sp.Weight > 0).ToList().ForEach(sp => {
+                for(i = 0; i < sp.Weight; ++i)
+                    spawnPoints.Add(sp);
+            });
+
+            SpawnPoint point;
+            for(; s < count && spawnPoints.Count > 0; ++s) {
+                point = spawnPoints[RNG.Next(spawnPoints.Count)];                
+                spawnPoints.RemoveAll(p => p.Equals(point));
+                if(spawnAt(point)) ++s;
+            }
+        }
+
+        /// Helper for choose, load and place a spawning entity
+        /// on the map. Returns true on success false otherwise
+        protected bool spawnAt(SpawnPoint point) {
+            List<Spawn> spawns = new List<Spawn>();
+
+            int i;
+            point.Spawns.ForEach(spawn => {
+                for(i = 0; i < spawn.Weight; ++i)
+                    spawns.Add(spawn);
+            });
+
+            if(spawns.Count > 0) {
+                Entity e = Content.Load<Npc>(spawns[RNG.Next(spawns.Count)].NPC);
+                e.Position = point.Position.ToVector2();
+                e.load(Content);
+                addEntity(e);
+                return true;
+            }
+
+            return false;
         }
 
         /// Initializes this map and all its objects.
@@ -270,19 +344,47 @@
 
         /// Loads all for this map required assets
         /// into memory (TODO does not need to be virtual)
-        public void load(ContentManager content) {
-            foreach(Tile tile in Tiles) tile.load(content);
-            foreach(Entity entity in Entities) entity.load(content);
+        /// TODO deprecated (remove)
+        // public void load(ContentManager content) {
+        //     foreach(Tile tile in Tiles) tile.load(content);
+        //     foreach(Entity entity in Entities) entity.load(content);
+
+        //     // testing: background music (TODO)
+        //     if(BackgroundMusicFile != null) try {
+        //         BackgroundMusic = content.Load<Song>(BackgroundMusicFile);
+        //         // MediaPlayer.Play(BackgroundMusic);
+        //     } catch(ContentLoadException) {
+        //         // ignore
+        //     }
+
+        //     Cursor.load(content);
+        // }
+
+        /// Loads all required resources for this
+        /// map and any entities on it
+        public void load() {
+            if(Content == null && game != null)
+                Content = new ContentManager(game.Services, "Content");
+
+            foreach(Tile tile in Tiles) tile.load(Content);
+            foreach(Entity entity in Entities) entity.load(Content);
 
             // testing: background music (TODO)
-            if(BackgroundMusicFile != null) try {
-                BackgroundMusic = content.Load<Song>(BackgroundMusicFile);
-                // MediaPlayer.Play(BackgroundMusic);
-            } catch(ContentLoadException) {
-                // ignore
-            }
+            // if(BackgroundMusicFile != null) try {
+            //     BackgroundMusic = Content.Load<Song>(BackgroundMusicFile);
+            //     // MediaPlayer.Play(BackgroundMusic);
+            // }
 
-            Cursor.load(content);
+            Cursor.load(Content);
+        }
+
+        /// Unloads and disposes all resources this
+        /// map and any entities on it require
+        public void unload() {
+            if(Content != null) {
+                Content.Dispose(); // alos calls Unload
+                Content = null; // let garbage collection do the rest
+            }
         }
 
         /// Aligns the map and updates all game object on it.

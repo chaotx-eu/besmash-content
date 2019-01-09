@@ -75,13 +75,9 @@ namespace BesmashContent {
                 }
             }
 
-            node = null;
-            closed.ToList().ForEach(
-                n => node = node == null
-                || n.Len < node.Len ? n : node
-            );
-
+            node = closed.OrderBy(n => n.Len).First();
             List<Point> path = new List<Point>();
+
             while(node != null) {
                 path.Insert(0, node.Pos);
                 node = node.Pre;
