@@ -265,6 +265,7 @@
 
             if(spawns.Count > 0) {
                 Entity e = Content.Load<Npc>(spawns[RNG.Next(spawns.Count)].NPC);
+                if(e is Npc) (e as Npc).SpawnPosition = point.Position;
                 e.Position = point.Position.ToVector2();
                 e.load(Content);
                 addEntity(e);
@@ -382,7 +383,7 @@
         /// map and any entities on it require
         public void unload() {
             if(Content != null) {
-                Content.Dispose(); // alos calls Unload
+                Content.Dispose(); // also calls Unload
                 Content = null; // let garbage collection do the rest
             }
         }

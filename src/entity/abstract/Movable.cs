@@ -106,28 +106,34 @@ namespace BesmashContent {
         }
 
         /// Moves on tile towards the facing of this movable
-        public void move() {
+        public bool move() {
             int x = Facing == Facing.East ? 1
                 : Facing == Facing.West ? -1 : 0;
 
             int y = Facing == Facing.South ? 1
                 : Facing == Facing.North ? -1 : 0;
 
-            move(x, y);
+            return move(x, y);
+        }
+
+        /// Overload for convenience, moves X tiles on the
+        /// x-axis and Y tiles on the y-axis
+        public bool move(Point vector) {
+            return move(vector.X, vector.Y);
         }
 
         /// Moves this object distanceX tiles on the x-axis and
         /// distanceY tiles on the y-axis relative to its own
         /// position. The default collision resolver is used
-        public virtual void move(int distanceX, int distanceY) {
-            move(distanceX, distanceY, CollisionResolver);
+        public virtual bool move(int distanceX, int distanceY) {
+            return move(distanceX, distanceY, CollisionResolver);
         }
 
         /// Moves this object distanceX tiles on the x-axis and
         /// distanceY tiles on the y-axis relative to its own
         /// position. Collisions are resolved by the passed
         /// collision resolver.
-        public virtual void move(int distanceX, int distanceY, CollisionResolver resolve) {
+        public virtual bool move(int distanceX, int distanceY, CollisionResolver resolve) {
             if(!Moving && (distanceX != 0 || distanceY != 0)) {
                 // TODO sprite is updated with delay
                 //      when turning, not sure why
@@ -150,13 +156,17 @@ namespace BesmashContent {
                 Point? newDistance = resolve(distanceX, distanceY, targets);
                 if(newDistance != null) {
                     move(newDistance.Value.X, newDistance.Value.Y, resolve);
-                    return;
+                    return false;
                 }
                     
                 Moving = true;
                 onMoveStarted(new MoveEventArgs(
                     Position.ToPoint(), Target));
+
+                return true;
             }
+
+            return false;
         }
         
         float stepTimer, idleTimer;
