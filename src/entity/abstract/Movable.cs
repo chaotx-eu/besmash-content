@@ -105,7 +105,7 @@ namespace BesmashContent {
                 Position.ToPoint(), Target));
         }
 
-        /// Moves on tile towards the facing of this movable
+        /// Moves one tile towards the facing of this movable
         public bool move() {
             int x = Facing == Facing.East ? 1
                 : Facing == Facing.West ? -1 : 0;
@@ -167,6 +167,21 @@ namespace BesmashContent {
             }
 
             return false;
+        }
+
+        /// Moves this object to the absolute target coordinate
+        public bool moveTo(Point pos) {
+            return moveTo(pos.X, pos.Y);
+        }
+
+        /// Moves this object to the absolute target coordinate
+        public bool moveTo(int x, int y) {
+            return moveTo(x, y, CollisionResolver);
+        }
+
+        /// Moves this object to the absolute target coordinate
+        public bool moveTo(int x, int y, CollisionResolver resolve) {
+            return move(x - (int)Position.X, y - (int)Position.Y, resolve);
         }
         
         float stepTimer, idleTimer;

@@ -1,10 +1,41 @@
 namespace BesmashContent {
     using Microsoft.Xna.Framework;
+    using Microsoft.Xna.Framework.Content;
     using System.Collections.Generic;
     using System.Linq;
 
 
     public class Enemy : Npc, IBattleAI {
+        /// The range at which this enemy will drag
+        /// the active team into a battle
+        [ContentSerializer(Optional = true)]
+        public int AggroRange {get; set;} = 2; // TODO remove default value
+
+        /// Updates this enemy, checks if there is
+        /// a player within aggro range and starts
+        /// a battle if this is the case
+        public override void update(GameTime gameTime) {
+            base.update(gameTime);
+            if(ContainingMap.State == TileMap.MapState.Roaming
+            && playerInRange()) ContainingMap.setFightingState();
+        }
+
+        /// Checks wether a player is within aggro range
+        /// of this enemies position and returns true
+        /// if this is the case false otherwise
+        protected bool playerInRange() {
+            for(int x, y = -AggroRange; y <= AggroRange; ++y)
+            for(x = -AggroRange; x <= AggroRange; ++x) {
+                if(ContainingMap.getEntities(
+                    Position.ToPoint().X + x,
+                    Position.ToPoint().Y + y)
+                .Any(e => e is Player))
+                    return true;
+            }
+
+            return false;
+        }
+
         /// Moves towards the closest player in sight
         /// within the battle map (i.e. the maps viewport)
         /// (In case several are in the same range the
@@ -15,8 +46,8 @@ namespace BesmashContent {
                 .Where(e => e is Player)
                 .Count() > 0;
 
-            Point tl = ContainingMap.BattleMapCenter - ContainingMap.Viewport;
-            Point br = ContainingMap.BattleMapCenter + ContainingMap.Viewport;
+            Point tl = ContainingMap.BattleMap.Position.ToPoint() - ContainingMap.Viewport;
+            Point br = ContainingMap.BattleMap.Position.ToPoint() + ContainingMap.Viewport;
             // List<Point> path = getShortestPath(tl, br, vl);
             // return path.Count > 1 ? (Point?)path[0] : null;
             // TODO

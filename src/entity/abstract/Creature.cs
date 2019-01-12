@@ -179,6 +179,17 @@ namespace BesmashContent {
             levelUp();
         }
 
+        /// Kills this creature in case its life is
+        /// lower or equal to zero by running its
+        /// death animation and then removing it
+        /// from the map and any battle maps.
+        public void die() {
+            if(HP > 0) return;
+            // TODO death animation (may be a row in the spritesheet)
+            ContainingMap.BattleMap.Participants.Remove(this);
+            ContainingMap.removeEntity(this);
+        }
+
         /// Initializes the random number generator
         /// of this creature
         protected virtual void initRNG() {

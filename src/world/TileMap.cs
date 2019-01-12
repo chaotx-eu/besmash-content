@@ -157,8 +157,9 @@
         public bool Initialized {get; private set;}
 
         /// The center of the viewport in fighting state
-        [ContentSerializerIgnore]
-        public Point BattleMapCenter {get; private set;}
+        // deprecated
+        // [ContentSerializerIgnore]
+        // public Point BattleMapCenter {get; private set;}
 
         /// Map to be loaded on next update. Resets to
         /// null on retreival
@@ -184,6 +185,10 @@
         [ContentSerializerIgnore]
         public Random RNG {get; protected set;}
 
+        /// The battle map of this tile map
+        [ContentSerializerIgnore]
+        public BattleMap BattleMap {get;}
+
         private string otherMap = null;
         private Point viewport = new Point(4, 4);
         private List<Entity> entities;
@@ -199,6 +204,7 @@
         public TileMap() {
             RNG = new Random();
             Cursor.ContainingMap = this;
+            BattleMap = new BattleMap(this);
         }
 
         /// This method is called after the map is loaded
@@ -331,35 +337,18 @@
         /// Figthing state
         public void align() {
             float dx = 0, dy = 0;
-            if(State == MapState.Roaming && Slave != null) {
+            // if(State == MapState.Roaming && Slave != null) {
+            if(Slave != null) {
                 dx = Slave.Position.X;
                 dy = Slave.Position.Y;
-            } else if(State == MapState.Fighting) {
-                dx = BattleMapCenter.X;
-                dy = BattleMapCenter.Y;
+            } else {// if(State == MapState.Fighting) {
+                dx = BattleMap.Position.X;
+                dy = BattleMap.Position.Y;
             }
 
             x = Viewport.X*tileWidth - (int)(dx*tileWidth);
             y = Viewport.Y*tileHeight - (int)(dy*tileHeight);
         }
-
-        /// Loads all for this map required assets
-        /// into memory (TODO does not need to be virtual)
-        /// TODO deprecated (remove)
-        // public void load(ContentManager content) {
-        //     foreach(Tile tile in Tiles) tile.load(content);
-        //     foreach(Entity entity in Entities) entity.load(content);
-
-        //     // testing: background music (TODO)
-        //     if(BackgroundMusicFile != null) try {
-        //         BackgroundMusic = content.Load<Song>(BackgroundMusicFile);
-        //         // MediaPlayer.Play(BackgroundMusic);
-        //     } catch(ContentLoadException) {
-        //         // ignore
-        //     }
-
-        //     Cursor.load(content);
-        // }
 
         /// Loads all required resources for this
         /// map and any entities on it
@@ -401,6 +390,20 @@
 
                 if(i < Entities.Count) Entities[i].update(gameTime);
                 if(i < Animations.Count) Animations[i].update(gameTime);
+            }
+
+            // check if battle is still ongoing
+            if(State == MapState.Fighting
+            && BattleMap.Participants.Where(c => c is Enemy).Count() == 0)
+                setRoamingState();
+
+            // Once a battle has finished the battle map moves
+            // towards the slave Player and once reached removes
+            // itself from the map and reset the slave
+            if(Slave == null && State == MapState.Roaming
+            && BattleMap.Position == slavePlayer.Position) {
+                Slave = slavePlayer;
+                removeEntity(BattleMap);
             }
         }
 
@@ -507,31 +510,56 @@
         }
 
         /// Shows and enables the cursor
+        private Movable slaveBuffer;
         public void showCursor() {
-            Cursor.Position = new Vector2(
-                BattleMapCenter.X,
-                BattleMapCenter.Y); // TODO (show at TeamLeader/last position)
+            Cursor.Position = BattleMap.Position; // TODO (show at TeamLeader/last position)
             Cursor.stop();
+            slaveBuffer = Slave;
             Slave = Cursor;
         }
 
         /// Hides and disables the cursor
         public void hideCursor() {
-            removeEntity(Cursor);
+            if(Slave is Cursor) {
+                removeEntity(Cursor);
+                Slave = slaveBuffer;
+            }
         }
 
+        public void setFightingState() {
+            Point center = Point.Zero;
+            BattleMap.Participants.Clear();
+            BattleMap.Participants.AddRange(Entities.Where(e => (e is Creature)
+                && e.Position.X >= Slave.Position.X - Viewport.X
+                && e.Position.X <= Slave.Position.X + Viewport.X
+                && e.Position.Y >= Slave.Position.Y - Viewport.Y
+                && e.Position.Y <= Slave.Position.Y + Viewport.Y).Cast<Creature>());
+                
+            BattleMap.Participants.ForEach(e => center += e.Position.ToPoint());
+            center /= new Point(BattleMap.Participants.Count, BattleMap.Participants.Count);
+            setFightingState(center);
+        }
+
+        private Movable slavePlayer; // backup slave player
         public void setFightingState(Point center) {
-            BattleMapCenter = center;
-            State = MapState.Fighting;
-            Slave = null;
+            if(State != MapState.Fighting) {
+                BattleMap.stop();
+                BattleMap.Position = Slave.Position;
+                State = MapState.Fighting;
+                slavePlayer = Slave;
+                Slave = null;
+                addEntity(BattleMap); // TODO sloppy solution (?)
+                BattleMap.moveTo(center);
+            }
         }
 
-        public void setRoamingState(Team team) {
-            if(Slave is Cursor)
-                removeEntity(Slave);
-
-            Slave = team.Leader;
-            State = MapState.Roaming;
+        public void setRoamingState() {
+            if(State != MapState.Roaming) {
+                hideCursor();
+                State = MapState.Roaming;
+                // Slave = slavePlayer;
+                BattleMap.moveTo(slavePlayer.Position.ToPoint());
+            }
         }
     }
 }

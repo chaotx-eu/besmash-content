@@ -7,7 +7,7 @@ namespace BesmashContent {
 
 
     [DataContract]
-    public class Npc : Creature, IRoamingAI {
+    public class Npc : Creature {
         /// The max distance this npc may move away
         /// from its spawn point while roaming.
         /// Negative values will allow it to roam
@@ -29,7 +29,7 @@ namespace BesmashContent {
         public Point SpawnPosition {get; set;}
 
         /// The pathfinder of this npc
-        [DataMember]
+        // [DataMember] // TODO saving this requires absurd amounts of memory
         [ContentSerializerIgnore]
         public Pathfinder Pathfinder {get; protected set;}
 
@@ -73,11 +73,6 @@ namespace BesmashContent {
                 }
             } else timer +=
                 gameTime.ElapsedGameTime.Milliseconds;
-        }
-
-        /// TODO (this interface is useless...)
-        public Point? nextMove() {
-            return null;
         }
 
         /// Selects a random target positon within the

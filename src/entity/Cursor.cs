@@ -35,8 +35,8 @@ namespace BesmashContent {
             StepTime = 200;
             CollisionResolver = (x, y, mo) => {
                 isSelected = false;
-                if(Math.Abs(Position.X + x - ContainingMap.BattleMapCenter.X) > ContainingMap.Viewport.X
-                || Math.Abs(Position.Y + y - ContainingMap.BattleMapCenter.Y) > ContainingMap.Viewport.Y)
+                if(Math.Abs(Position.X + x - ContainingMap.BattleMap.Position.X) > ContainingMap.Viewport.X
+                || Math.Abs(Position.Y + y - ContainingMap.BattleMap.Position.Y) > ContainingMap.Viewport.Y)
                     return Point.Zero;
 
                 return null;

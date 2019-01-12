@@ -62,11 +62,14 @@ namespace BesmashContent {
             // if(ThumbnailFile != null && Thumbnail == null)
             if(ThumbnailFile != null)
                 Thumbnail = content.Load<Texture2D>(ThumbnailFile);
+            else // no exception handling cause to slow :/ (TODO think of something else)
+                Thumbnail = content.Load<Texture2D>("images/world/entities/thumbnails/anonymous_thumb");
         }
 
         /// Draws this object to the screen.
         /// The passed SpriteBatch will not be closed.
         public void draw(SpriteBatch batch) {
+            if(Image == null) return;
             Vector2 origin = new Vector2(
                 SpriteRectangle.Width/2f,
                 SpriteRectangle.Height/2f);
