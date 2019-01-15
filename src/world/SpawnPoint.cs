@@ -15,6 +15,13 @@ namespace BesmashContent {
         [DataMember]
         public string NPC {get; set;}
 
+        /// The level range at which this npc
+        /// will spawn, where X is the min and
+        /// Y the max level (inclusive)
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public Point Level {get; set;} = new Point(1, 1);
+
         /// Weight of this spwan
         [DataMember]
         [ContentSerializer(Optional = true)]

@@ -270,10 +270,19 @@
             });
 
             if(spawns.Count > 0) {
-                Entity e = Content.Load<Npc>(spawns[RNG.Next(spawns.Count)].NPC);
+                Spawn spawn = spawns[RNG.Next(spawns.Count)];
+                Creature e = Content.Load<Npc>(spawn.NPC).clone() as Creature;
+                e.load(Content);
+
+                int lvl = RNG.Next(spawn.Level.X, spawn.Level.Y+1);
+                for(i = 0; i < lvl; ++i) {
+                    e.Exp = e.MaxExp;
+                    e.levelUp(1);
+                }
+
                 if(e is Npc) (e as Npc).SpawnPosition = point.Position;
                 e.Position = point.Position.ToVector2();
-                e.load(Content);
+                e.AP = e.MaxAP;
                 addEntity(e);
                 return true;
             }
@@ -337,8 +346,8 @@
         /// Figthing state
         public void align() {
             float dx = 0, dy = 0;
-            // if(State == MapState.Roaming && Slave != null) {
-            if(Slave != null) {
+            if(State == MapState.Roaming && Slave != null) {
+            // if(Slave != null) {
                 dx = Slave.Position.X;
                 dy = Slave.Position.Y;
             } else {// if(State == MapState.Fighting) {
@@ -399,8 +408,9 @@
 
             // Once a battle has finished the battle map moves
             // towards the slave Player and once reached removes
-            // itself from the map and reset the slave
-            if(Slave == null && State == MapState.Roaming
+            // itself from the map and resets the slave
+            if(State == MapState.Roaming
+            && Slave == null && slavePlayer != null
             && BattleMap.Position == slavePlayer.Position) {
                 Slave = slavePlayer;
                 removeEntity(BattleMap);
@@ -557,7 +567,6 @@
             if(State != MapState.Roaming) {
                 hideCursor();
                 State = MapState.Roaming;
-                // Slave = slavePlayer;
                 BattleMap.moveTo(slavePlayer.Position.ToPoint());
             }
         }

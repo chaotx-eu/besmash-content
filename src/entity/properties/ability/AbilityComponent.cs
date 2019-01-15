@@ -155,6 +155,7 @@ namespace BesmashContent {
 
             if(Animation != null) Animation.load(content);
             if(Projectile != null) Projectile.load(content);
+            if(Effect != null) Effect.load(content);
 
             Children.ForEach(child => {
                 child.Parent = this;
@@ -229,10 +230,12 @@ namespace BesmashContent {
                 updateAnimationRotation();
                 animation.ContainingMap = Ability.User.ContainingMap;
                 animationReady = true;
+            }
 
-                // TODO test attached effect
-                if(Effect != null) animation.ContainingMap
-                    .getEntities(animation.Position.ToPoint())
+            // TODO test attached effect
+            if(Effect != null) {
+                Ability.User.ContainingMap
+                    .getEntities(getPosition())
                     .Where(e => e is Creature).Cast<Creature>()
                     // .ToList().ForEach(c => Effect.attach(
                     //     Ability.User as Creature, c));
@@ -278,6 +281,16 @@ namespace BesmashContent {
 
             copy.Children = children;
             return copy;
+        }
+
+        /// Gets true position of this component
+        private Point getPosition() {
+            if(Parent == null) return
+                Ability.User.Position.ToPoint() + 
+                MapUtils.rotatePoint(Position, Ability.User.Facing);
+
+            return Parent.getPosition() +
+                MapUtils.rotatePoint(Position, Ability.User.Facing);
         }
 
         /// Updates the position of the animation

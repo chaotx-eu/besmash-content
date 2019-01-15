@@ -3,8 +3,36 @@ namespace BesmashContent {
 
     public enum StatType {Vit, Atk, Int, Def, Wis, Agi}
 
+    /// Helper class which comes with a set
+    /// of modifiers that the true stats of
+    /// the targetet creature may be
+    /// multiplied with
+    public class StatsMod : ICloneable {
+        public float VITMod {get; set;} = 1f;
+        public float ATKMod {get; set;} = 1f;
+        public float INTMod {get; set;} = 1f;
+        public float DEFMod {get; set;} = 1f;
+        public float WISMod {get; set;} = 1f;
+        public float AGIMod {get; set;} = 1f;
+
+        public object clone() {
+            return MemberwiseClone();
+        }
+    }
+
     [DataContract]
-    public class Stats {
+    public class Stats : ICloneable {
+        public static Stats operator*(Stats stats, StatsMod statsMod) {
+            return new Stats(
+                (int)(stats.VIT*statsMod.VITMod),
+                (int)(stats.ATK*statsMod.ATKMod),
+                (int)(stats.INT*statsMod.INTMod),
+                (int)(stats.DEF*statsMod.DEFMod),
+                (int)(stats.WIS*statsMod.WISMod),
+                (int)(stats.AGI*statsMod.AGIMod)
+            );
+        }
+
         /// The determined max value that can be
         /// possibly reached on one single stat
         public static int DeterminedMax {get;} = 1000;
@@ -12,7 +40,7 @@ namespace BesmashContent {
         /// Amount of stats added to a creature on level up
         public static int LevelUpPoints {get;} = 8;
 
-        /// Grow rate for of stats used for several calculations
+        /// Grow rate of stats used for several calculations
         public static int GrowRate {get;} = 14;
 
         [DataMember] public int VIT {get; protected set;}    // vitality (hp modifier)
@@ -75,6 +103,10 @@ namespace BesmashContent {
             DEF += def;
             WIS += wis;
             AGI += agi;
+        }
+
+        public object clone() {
+            return MemberwiseClone();
         }
     }
 }

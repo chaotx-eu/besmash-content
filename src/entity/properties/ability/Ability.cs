@@ -45,7 +45,7 @@ namespace BesmashContent {
             return targets;
         }
 
-        /// Helper to for getting target spots traversing
+        /// Helper for getting target spots traversing
         /// recursivly through the components
         private void getTargets(AbilityComponent component, List<Point> targets) {
             AbilityComponent comp = component;

@@ -12,11 +12,26 @@ namespace BesmashContent {
         /// Multiplier for critical hits
         public static float CritMultiplier {get;} = 1.5f;
 
+        /// Animation which is shown on victim position
+        /// when this effect is applied
+        [DataMember]
+        [ContentSerializer(ElementName = "Animation", Optional = true)]
+        public string AnimationFile {get; set;}
+
+        [DataMember]
+        private SpriteAnimation animation;
+
         /// Base damage that is applied to the creature
         /// this effect is attached to
         [DataMember]
         [ContentSerializer(Optional = true)]
         public int BaseDamage {get; set;}
+
+        /// Grow rate base damage will be multiplied
+        /// with after any time this effect is applied
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public float BaseDamageGrow {get; set;}
 
         /// The property base damage will target
         [DataMember]
@@ -37,7 +52,7 @@ namespace BesmashContent {
         /// taking the stats of the effect source (e.g.
         /// another player), if one exists, and the stats
         /// of the creature this effect is attached to
-        /// into account
+        /// into account. True by default
         [DataMember]
         [ContentSerializer(Optional = true)]
         public bool RecalculateBaseDamage {get; set;}
@@ -48,6 +63,12 @@ namespace BesmashContent {
         [ContentSerializer(Optional = true)]
         public int BaseHeal {get; set;}
 
+        /// Grow rate base heal will be multiplied
+        /// with after any time this effect is applied
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public float BaseHealGrow {get; set;}
+
         /// The property base heal will target
         [DataMember]
         [ContentSerializer(Optional = true)]
@@ -57,7 +78,7 @@ namespace BesmashContent {
         /// taking the stats of the effect source (e.g.
         /// another player), if one exists, and the stats
         /// of the creature this effect is attached to
-        /// into account
+        /// into account. True by default
         [DataMember]
         [ContentSerializer(Optional = true)]
         public bool RecalculateBaseHeal {get; set;}
@@ -103,7 +124,13 @@ namespace BesmashContent {
         [ContentSerializer(Optional = true)]
         public bool RecalculatePercentHeal {get; set;}
 
-        /// How many turns at this effect will
+        /// Modifiers that are appplied to
+        /// the stats of the targeted creature
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public StatsMod StatsMod {get; set;}
+
+        /// How many turns this effect will
         /// stick to the creature where X is
         /// the min and Y is the max amount
         [DataMember]
@@ -143,6 +170,14 @@ namespace BesmashContent {
         [ContentSerializerIgnore]
         private int MaxTurns {get; set;}
 
+        public void load(ContentManager content) {
+            if(AnimationFile != null)
+                animation = content.Load<SpriteAnimation>(AnimationFile);
+
+            if(animation != null)
+                animation.load(content);
+        }
+
         /// Creates a new Effect with default properties
         public AbilityEffect() {
             TurnsToLast = new Point(1, 1);
@@ -150,6 +185,7 @@ namespace BesmashContent {
             RecalculatePercentDamage = false;
             RecalculateBaseHeal = true;
             RecalculatePercentHeal = false;
+            StatsMod = new StatsMod();
         }
 
         /// Attaches a new instance of this effect
@@ -162,6 +198,7 @@ namespace BesmashContent {
             copy.IsActive = true;
             copy.MaxTurns = user.RNG.Next(TurnsToLast.X, TurnsToLast.Y+1);
             victim.Effects.Add(copy);
+            copy.apply(); // affects are applied once when attached (TODO test)
         }
 
         /// Applies this effect to the creature
@@ -182,12 +219,22 @@ namespace BesmashContent {
             else if(BaseHealTarget == PropertyTarget.AP)
                 Victim.AP += calculateBaseHeal();
 
+            if(animation != null && Victim.ContainingMap != null) {
+                animation.Position = Victim.Position;
+                Victim.ContainingMap.addAnimation(animation);
+            }
+
+            BaseDamage = (int)(BaseDamage*BaseDamageGrow);
+            BaseHeal = (int)(BaseHeal*BaseHealGrow);
+
             // TODO PercentDamage and PercentHeal
         }
 
         /// Creates a clone of this effect
         public object clone() {
-            return MemberwiseClone();
+            AbilityEffect copy = MemberwiseClone() as AbilityEffect;
+            copy.animation = animation == null ? null : animation.clone() as SpriteAnimation;
+            return copy;
         }
 
         /// Calculates the base damage (TODO what if user == null)

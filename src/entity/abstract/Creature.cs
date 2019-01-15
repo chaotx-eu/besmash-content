@@ -11,10 +11,6 @@ namespace BesmashContent {
         /// The max reachable level
         public static int MaxLevel {get;} = 100;
 
-        /// The amount of exp a creature requires
-        /// to reach level one from level zero
-        public static int BirthExp {get;} = 100;
-
         /// The name of this creature
         [ContentSerializer(Optional = true)]
         public string Name {
@@ -31,9 +27,18 @@ namespace BesmashContent {
         public Class Class {get; set;}
 
         /// The stats of this creature
-        [DataMember]
         [ContentSerializer(Optional = true)]
-        public Stats Stats {get; set;}
+        public Stats Stats {
+            get {
+                Stats s = stats;
+                Effects.ForEach(e => s *= e.StatsMod);
+                return s;
+            }
+            set {stats = value;}
+        }
+
+        [DataMember]
+        private Stats stats;
 
         /// The element of this creature
         [DataMember]
@@ -63,6 +68,27 @@ namespace BesmashContent {
         [ContentSerializer(Optional = true)]
         public int Level {get; set;}
 
+        /// The amount of exp this creature requires
+        /// to reach level one from level zero. Also
+        /// affects the amount of exp this creature
+        /// grants when killed (default 100)
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public int BirthExp {get; set;} = 100;
+
+        /// List of ability files this creature
+        /// receives when loaded
+        [ContentSerializer(ElementName = "DefaultAbilities", CollectionItemName ="Path", Optional = true)]
+        public List<string> AbilityFiles {
+            get {return abilityFiles == null
+                ? (abilityFiles = new List<string>())
+                : abilityFiles;}
+            set {abilityFiles = value;}
+        }
+
+        [DataMember]
+        private List<string> abilityFiles;
+
         /// The amount of gathered exp in this level
         [DataMember]
         [ContentSerializerIgnore]
@@ -74,9 +100,14 @@ namespace BesmashContent {
         public int HP {get; set;}
 
         /// The current action points of this creature
-        [DataMember]
         [ContentSerializerIgnore]
-        public int AP {get; set;}
+        public int AP {
+            get {return ap;}
+            set {ap = Math.Min(MaxAP, value);}
+        }
+
+        [DataMember]
+        private int ap;
 
         /// Abilities this creature is capable of
         [DataMember]
@@ -112,6 +143,20 @@ namespace BesmashContent {
             get {return (int)(BirthExp*Math.Pow(Math.E, Level/6f));}
         }
 
+        /// How much exp this creature grants
+        /// when killed at its current level
+        [ContentSerializerIgnore]
+        public int ExpGrant {get { // TODO this is some random formular
+            return (int)(MaxExp/(5 + 95*(Level/(float)MaxLevel)));
+        }}
+
+        /// Wether this creature is currently participating a battle
+        [ContentSerializerIgnore]
+        public bool IsFighting {get; set;}
+
+        /// Event handler which is triggered when a creature dies
+        public event EventHandler DeathEvent;
+
         public Creature() : this("") {}
         public Creature(string spriteSheet) : base(spriteSheet) {
             Abilities = new List<Ability>();
@@ -124,6 +169,12 @@ namespace BesmashContent {
         /// Loads required resources for this creature
         public override void load(ContentManager content) {
             base.load(content);
+            AbilityFiles.ForEach(af => {
+                Ability ability = content.Load<Ability>(af);
+                if(Abilities.Where(a => a.Title == ability.Title).Count() == 0)
+                    addAbility(ability.clone() as Ability);
+            });
+
             Abilities.ForEach(a => a.load(content));
             if(Class != null) Class.Creature = this;
         }
@@ -148,7 +199,7 @@ namespace BesmashContent {
         /// that are currently executed
         public override void update(GameTime gameTime) {
             base.update(gameTime);
-
+            if(HP <= 0) die();
             Abilities.Where(a => a.IsExecuting)
                 .ToList().ForEach(a => a.update(gameTime));
         }
@@ -165,16 +216,16 @@ namespace BesmashContent {
         /// if CurrentExp is greater or equal to
         /// ExpToNextLevel recursivly (TODO max level)
         public void levelUp() {
-            levelUp(true);
+            levelUp(0);
         }
 
-        public void levelUp(bool heal) {
+        public void levelUp(float healPercent) {
             int excess = Exp - MaxExp;
             if(excess < 0) return;
             Exp = excess;
             Class.raiseStats();
             ++Level;
-            if(heal) HP = MaxHP; // TODO test
+            HP = Math.Min(MaxHP, HP + (int)(MaxHP*healPercent));
             // TODO fire levelUpEvent
             levelUp();
         }
@@ -186,6 +237,7 @@ namespace BesmashContent {
         public void die() {
             if(HP > 0) return;
             // TODO death animation (may be a row in the spritesheet)
+            onDeath(null);
             ContainingMap.BattleMap.Participants.Remove(this);
             ContainingMap.removeEntity(this);
         }
@@ -194,6 +246,27 @@ namespace BesmashContent {
         /// of this creature
         protected virtual void initRNG() {
             if(RNG == null) RNG = new Random();
+        }
+
+        protected void onDeath(EventArgs args) {
+            EventHandler handler = DeathEvent;
+            if(handler != null) handler(this, args);
+        }
+
+        public new object clone() {
+            Creature copy = base.clone() as Creature;
+            copy.RNG = new Random();
+            copy.Stats = Stats.clone() as Stats;
+            copy.Effects = new List<AbilityEffect>();
+            copy.Abilities = new List<Ability>();
+            Abilities.ForEach(a => copy.addAbility(a.clone() as Ability));
+
+            // TODO
+            // copy.Weapon = Weapone.clone() as Weapon;
+            // copy.Chestplate = Chestplate.clone() as Chestplate;
+            // copy.Helmet = Helmet.clone() as Helmet;
+            // copy.Pants = Pants.clone() as Pants;
+            return copy;
         }
     }
 }

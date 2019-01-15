@@ -7,7 +7,7 @@ namespace BesmashContent {
 
 
     [DataContract]
-    public class Npc : Creature {
+    public class Npc : Creature, ICloneable {
         /// The max distance this npc may move away
         /// from its spawn point while roaming.
         /// Negative values will allow it to roam
@@ -48,7 +48,8 @@ namespace BesmashContent {
         /// target for roaming or move to the next position
         /// in the path of the pathfinder towrads the target
         public override void update(GameTime gameTime) {
-            base.update(gameTime);
+            base.update(gameTime);        
+            if(IsFighting) return;
 
             if(Pathfinder.IsAtWork) {
                 Pathfinder.update();
@@ -100,6 +101,12 @@ namespace BesmashContent {
             }
 
             return false;
+        }
+
+        public new object clone() {
+            Npc copy = base.clone() as Npc;
+            copy.Pathfinder = new Pathfinder(copy);
+            return copy;
         }
     }
 }

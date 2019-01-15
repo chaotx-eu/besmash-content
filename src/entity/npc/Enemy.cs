@@ -16,7 +16,7 @@ namespace BesmashContent {
         /// a battle if this is the case
         public override void update(GameTime gameTime) {
             base.update(gameTime);
-            if(ContainingMap.State == TileMap.MapState.Roaming
+            if(ContainingMap != null && ContainingMap.State == TileMap.MapState.Roaming
             && playerInRange()) ContainingMap.setFightingState();
         }
 

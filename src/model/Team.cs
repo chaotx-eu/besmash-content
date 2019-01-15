@@ -9,9 +9,18 @@ namespace BesmashContent {
 
     [DataContract(IsReference = true)]
     public class Team {
-        [DataMember]
         /// Leader of the team
-        public Player Leader {get; set;}
+        public Player Leader {
+            get {return leader;}
+            set {
+                if(leader != null) leader.MoveStartedEvent -= onLeaderMoveStarted;
+                if(value != null) value.MoveStartedEvent += onLeaderMoveStarted;
+                leader = value;
+            }
+        }
+
+        [DataMember]
+        private Player leader;
 
         [DataMember]
         /// Members of the team excluding the leader
@@ -69,6 +78,7 @@ namespace BesmashContent {
             if(Members.Remove(player)) {
                 lastSpots.Limit -= 1;
                 targetSpots = new Point[Player.Count];
+                player.MoveStartedEvent -= onMemberMoveStarted;
             }
         }
 
@@ -81,14 +91,24 @@ namespace BesmashContent {
         /// to the formation strategy after the leader has not
         /// moved for MaxIdleTime milliseconds
         public void update(GameTime time) {
+            if(Leader.HP <= 0) {
+                if(Members.Count > 0) {
+                    Leader = Members[0];
+                    Members.RemoveAt(0);
+                } else {
+                    // TODO game over
+                    int todo = 42;
+                }
+            }
+
             if(Leader.Moving)
                 idleTime = 0;
             else {
                 if(idleTime < MaxIdleTime)
                     idleTime += time.ElapsedGameTime.Milliseconds;
 
-                if(idleTime >= MaxIdleTime)
-                    Members.ForEach(toFormation);
+                if(idleTime >= MaxIdleTime) for(int i = Members.Count-1; i >= 0; --i)
+                    toFormation(Members[i]);
             }
         }
 
@@ -116,6 +136,13 @@ namespace BesmashContent {
         /// in the team formation (i.e. its offset),
         /// moves the member to line on failure
         protected void toFormation(Player member) {
+            if(member.HP <= 0) {
+                removeMember(member);
+                return;
+            }
+
+            if(member.IsFighting) return;
+
             Point offset;
             if(Formation.TryGetValue(member, out offset)) {
                 offset = MapUtils.rotatePoint(offset, Leader.Facing);
@@ -142,26 +169,52 @@ namespace BesmashContent {
                 ? 1 : distance <= 2 ? 0.5f : (1f - 1f/(distance*2))));
         }
 
-        /// Initializes event handler require for the leader
+        /// Initializes event handler required for the leader
         /// and members of this team.
         protected void initHandler() {
-            Leader.MoveStartedEvent += (mv, args) => {
-                lastSpots.Insert(0, args.Position);
-                targetSpots[Members.Count] = args.Target;
+            Leader.MoveStartedEvent -= onLeaderMoveStarted;
+            Leader.MoveStartedEvent += onLeaderMoveStarted;
+            Members.ForEach(m => {
+                m.MoveStartedEvent -= onMemberMoveStarted;
+                m.MoveStartedEvent += onMemberMoveStarted;
+            });
+
+            // Leader.MoveStartedEvent += (mv, args) => {
+            //     lastSpots.Insert(0, args.Position);
+            //     targetSpots[Members.Count] = args.Target;
                 
-                // switch spot with member/s if he/they is/are standing at the target
-                Members.Where(m => m.Position.ToPoint().Equals(args.Target))
-                    .ToList().ForEach(m => m.move(
-                        args.Position.X - (int)m.Position.X,
-                        args.Position.Y - (int)m.Position.Y,
-                        (x, y, mo) => null));
+            //     // switch spot with member/s if he/they is/are standing at the target
+            //     Members.Where(m => m.Position.ToPoint().Equals(args.Target))
+            //         .ToList().ForEach(m => m.move(
+            //             args.Position.X - (int)m.Position.X,
+            //             args.Position.Y - (int)m.Position.Y,
+            //             (x, y, mo) => null));
 
-                // movement is smother if updated immediatley after event call
-                Members.ForEach(member => toFormation(member));
-            };
+            //     // movement is smother if updated immediatley after event call
+            //     Members.ForEach(member => toFormation(member));
+            // };
 
-            Members.ForEach(m => m.MoveStartedEvent += (mv, args)
-                => targetSpots[Members.IndexOf(m)] = args.Target);
+            // Members.ForEach(m => m.MoveStartedEvent += (mv, args)
+            //     => targetSpots[Members.IndexOf(m)] = args.Target);
+        }
+
+        protected void onLeaderMoveStarted(MapObject sender, MoveEventArgs args) {
+            lastSpots.Insert(0, args.Position);
+            targetSpots[Members.Count] = args.Target;
+            
+            // switch spot with member/s if he/they is/are standing at the target
+            Members.Where(m => m.Position.ToPoint().Equals(args.Target))
+                .ToList().ForEach(m => m.move(
+                    args.Position.X - (int)m.Position.X,
+                    args.Position.Y - (int)m.Position.Y,
+                    (x, y, mo) => null));
+
+            // movement is smother if updated immediatley after event call
+            Members.ForEach(member => toFormation(member));
+        }
+
+        protected void onMemberMoveStarted(MapObject sender, MoveEventArgs args) {
+            targetSpots[Members.IndexOf(sender as Player)] = args.Target;
         }
 
         [OnDeserialized]
