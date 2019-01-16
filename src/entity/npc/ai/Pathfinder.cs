@@ -121,12 +121,14 @@ namespace BesmashContent {
                         pos = s + probe.Pos;
                         node = new Node(pos, probe);
                         closedList.TryGetValue(pos, out other);
-                        if(validator(pos)) targets.Add(pos);
+                        if(validator(pos) && !targets.Contains(pos))
+                            targets.Add(pos);
 
                         if(pos.X >= tl.X && pos.X <= br.X
                         && pos.Y >= tl.Y && pos.Y <= br.Y
                         && (other == null || other.Len > node.Len)
                         && !Owner.ContainingMap.getTiles(pos).Any(t => t.Solid)
+                        && openList.Where(o => o.Pos == pos && o.Len <= node.Len).Count() == 0
                         && Owner.ContainingMap.getEntities(pos)
                         .Where(e => e is Creature).Count() == 0)
                             openList.Add(node);

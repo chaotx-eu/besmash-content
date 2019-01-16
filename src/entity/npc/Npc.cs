@@ -49,12 +49,13 @@ namespace BesmashContent {
         /// in the path of the pathfinder towrads the target
         public override void update(GameTime gameTime) {
             base.update(gameTime);        
-            if(IsFighting) return;
-
             if(Pathfinder.IsAtWork) {
                 Pathfinder.update();
                 return;
-            } else if(!Moving && Pathfinder.Path.Count > 0) {
+            }
+
+            if(IsFighting) return;
+            if(!Moving && Pathfinder.Path.Count > 0) {
                 if(moveTimer >= movePause) {                
                     if(move(Pathfinder.Path[0] - Position.ToPoint())) {
                         Pathfinder.Path.RemoveAt(0);

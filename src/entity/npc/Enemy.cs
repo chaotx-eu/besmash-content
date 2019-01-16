@@ -1,4 +1,5 @@
 namespace BesmashContent {
+    using Utility;
     using Microsoft.Xna.Framework;
     using Microsoft.Xna.Framework.Content;
     using System.Collections.Generic;
@@ -36,22 +37,44 @@ namespace BesmashContent {
             return false;
         }
 
+        private bool newPath;
         /// Moves towards the closest player in sight
         /// within the battle map (i.e. the maps viewport)
         /// (In case several are in the same range the
         /// one with the lowest health is targeted) TODO
         public Point? nextMove() {
-            Pathfinder.Validator vl = pos => ContainingMap
-                .getEntities(pos)
-                .Where(e => e is Player)
-                .Count() > 0;
+            if(AP < 10) return Point.Zero; // TODO move cost
+            if(Pathfinder.IsAtWork) return null;
+
+            if(newPath) {
+                newPath = false;
+                if(Pathfinder.Path.Count > 0) {
+                    Point step = Pathfinder.Path[0];
+                    Pathfinder.Path.Clear();
+                    return step;
+                } else return Point.Zero;
+            } else newPath = true;
+            
+            Pathfinder.Validator vl = pos => {
+                bool playerAdjacent = false;
+                Point p = new Point(0, -1);
+                for(int s = 0; s < 4; ++s) {
+                    if(ContainingMap.getEntities(pos + MapUtils.rotatePoint(p, (Facing)s))
+                    .Where(e => e is Player).Count() > 0) {
+                        playerAdjacent = true;
+                        break;
+                    }
+                }
+
+                return playerAdjacent && ContainingMap
+                    .getTiles(pos).Where(t => t.Solid)
+                    .Count() == 0;
+            };
 
             Point tl = ContainingMap.BattleMap.Position.ToPoint() - ContainingMap.Viewport;
             Point br = ContainingMap.BattleMap.Position.ToPoint() + ContainingMap.Viewport;
-            // List<Point> path = getShortestPath(tl, br, vl);
-            // return path.Count > 1 ? (Point?)path[0] : null;
-            // TODO
-            return Point.Zero;
+            Pathfinder.getShortestPath(tl, br, vl);
+            return null;
         }
 
         /// Checks if there is an affordable ability
@@ -61,6 +84,7 @@ namespace BesmashContent {
         /// creature with the lowest health is chosen
         public Ability nextAbility() {
             Ability ability = null;
+            Facing facing = Facing;
             int minHP = -1;
             int maxAP = 0;
 
@@ -70,9 +94,14 @@ namespace BesmashContent {
                     || (minHP == HP && c.AP > maxAP)) {
                         ability = a;
                         maxAP = c.AP;
+                        facing = c.Position.X > Position.X ? Facing.East
+                            : c.Position.X < Position.X ? Facing.West
+                            : c.Position.Y > Position.Y ? Facing.South
+                            : c.Position.Y < Position.Y ? Facing.North : Facing;
                     }
                 }));
 
+            Facing = facing; // TODO test if turn happens before execution
             return ability;
         }
 
@@ -83,10 +112,10 @@ namespace BesmashContent {
             List<Creature> targets = new List<Creature>();
 
             // TODO check all four facings
-            ability.getTargetSpots()
-                .Where(spot => canSee(Position.ToPoint() + spot))
+            for(int s = 0; s < 4; ++s) ability.getTargetSpots()
+                .Where(spot => canSee(Position.ToPoint() + MapUtils.rotatePoint(spot, (Facing)s)))
                 .ToList().ForEach(spot => ContainingMap
-                    .getEntities(Position.ToPoint() + spot)
+                    .getEntities(Position.ToPoint() + MapUtils.rotatePoint(spot, (Facing)s))
                     .Where(e => e is Player)
                     .Cast<Player>().ToList()
                     .ForEach(targets.Add));
