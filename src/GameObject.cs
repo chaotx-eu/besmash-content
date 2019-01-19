@@ -12,6 +12,7 @@ namespace BesmashContent {
     public class GameObject : ICloneable {
         /// Source SpriteSheet url.
         [DataMember]
+        [ContentSerializer(Optional = true)]
         public string SpriteSheet {get; set;}
 
         /// Path to thumbnail image
@@ -27,12 +28,42 @@ namespace BesmashContent {
         /// Rotation of the Sprite.
         [DataMember]
         [ContentSerializer(Optional = true)]
-        public float Rotation {get; set;} = 0;
+        public float Rotation {get; set;}
 
-        /// Drawing layer of this GameObject, default 0
+        /// Wether the sprite should be mirrored when drawn
         [DataMember]
-        [ContentSerializer(Optional = true)] // TODO ignore causes crash
-        public virtual float Layer {get; set;} = 0;
+        [ContentSerializer(Optional = true)]
+        public bool Mirror {get; set;}
+
+        /// Layers are seperated in two dimensions where
+        /// the first one, the layer level, will be evaluated
+        /// automatically dependent on the type of this object
+        /// if not set manually (see MapUtils.getLayer(Type)).
+        /// Only values between 0 and MapUtils.MaxLayer are supported
+        [ContentSerializer(Optional = true)]
+        public int LayerLevel {
+            get {return layerLevel;}
+            set {layerLevel = Math.Max(0, Math.Min(MapUtils.MaxLayer, value));}
+        }
+
+        [DataMember]
+        private int layerLevel;
+
+        /// Layer when drawn on a map. Will share a range
+        /// of MapUtils.MaxLayer layers with objects on the
+        /// same layer level (i.e. the same type by default)
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public int MapLayer {get; set;}
+
+        /// True layer this object is drawn to
+        [DataMember]
+        [ContentSerializerIgnore]
+        public float Layer {get {
+            return LayerLevel/
+            (10f*MapUtils.MaxLayer)
+                + MapLayer/(100f*MapUtils.MaxLayer);
+        }}
 
         /// Rectangle to draw to on the screen.
         [DataMember]
@@ -52,6 +83,10 @@ namespace BesmashContent {
         [ContentSerializerIgnore]
         public Texture2D Thumbnail {get; set;}
 
+        public GameObject() {
+            layerLevel = MapUtils.getLayer(GetType());
+        }
+
         /// Loads required resources for this object
         public virtual void load(ContentManager content) {
             // TODO overthink conditions
@@ -68,15 +103,18 @@ namespace BesmashContent {
 
         /// Draws this object to the screen.
         /// The passed SpriteBatch will not be closed.
-        public void draw(SpriteBatch batch) {
+        public virtual void draw(SpriteBatch batch) {
             if(Image == null) return;
+            SpriteEffects effects = !Mirror ? SpriteEffects.None
+                :   SpriteEffects.FlipHorizontally;
+
             Vector2 origin = new Vector2(
                 SpriteRectangle.Width/2f,
                 SpriteRectangle.Height/2f);
                 
             batch.Draw(Image, MapUtils.rotateRectangle(DestinationRectangle, (int)Rotation),
                 SpriteRectangle, Color*TileMap.MapAlpha, Rotation*(float)Math.PI/180f,
-                origin, SpriteEffects.None, Layer);
+                origin, effects, Layer);
         }
         
         /// Updates this object.

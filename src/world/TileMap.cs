@@ -156,11 +156,6 @@
         [ContentSerializerIgnore]
         public bool Initialized {get; private set;}
 
-        /// The center of the viewport in fighting state
-        // deprecated
-        // [ContentSerializerIgnore]
-        // public Point BattleMapCenter {get; private set;}
-
         /// Map to be loaded on next update. Resets to
         /// null on retreival
         [ContentSerializerIgnore]
@@ -360,11 +355,10 @@
         }
 
         /// Loads all required resources for this
-        /// map and any entities on it
-        public void load() {
-            if(Content == null && game != null)
-                Content = new ContentManager(game.Services, "Content");
-
+        /// map and any entities on it and assigns
+        /// the passed content manager to this map
+        public void load(ContentManager content) {
+            Content = content;
             foreach(Tile tile in Tiles) tile.load(Content);
             foreach(Entity entity in Entities) entity.load(Content);
 
@@ -462,7 +456,6 @@
         public void addEntity(Entity e) {
             if(!Entities.Contains(e)) {
                 e.ContainingMap = this;
-                e.Layer = 4/8f; // TODO EntityLayer/MAX_LAYER
                 Entities.Add(e);
             }
         }

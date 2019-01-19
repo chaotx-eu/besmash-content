@@ -8,14 +8,17 @@ namespace BesmashContent {
     public class SpriteAnimation : MapObject, ICloneable {
         /// Total amount of sprites per row in this animation
         [DataMember]
+        [ContentSerializer(Optional = true)]
         public int SpriteCount {get; set;}
 
         /// Size of a single sprite
         [DataMember]
+        [ContentSerializer(Optional = true)]
         public Point SpriteSize {get; set;}
 
         /// How many sprites are shown per second
         [DataMember]
+        [ContentSerializer(Optional = true)]
         public int SpritesPerSecond {get; set;}
 
         /// Row index in the sprite sheet
@@ -98,7 +101,7 @@ namespace BesmashContent {
             }
 
             SpriteRectangle = new Rectangle(
-                SpriteSize.X*column, SpriteRow,
+                SpriteSize.X*column, Math.Max(0, SpriteRow-1)*SpriteSize.Y,
                 SpriteSize.X, SpriteSize.Y
             );
         }

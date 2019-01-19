@@ -12,20 +12,6 @@ namespace BesmashContent {
         [ContentSerializer(Optional = true)]
         public bool Solid {get; set;} = false;
 
-        /// Tiles can be on different layers on the map.
-        /// A fraction of this value is added to the absolute
-        /// layer of this tile
-        [ContentSerializer(Optional = true, ElementName = "Layer")]
-        public float MapLayer {get; set;}
-
-        /// The absolute layer of this tile including
-        /// its map layer
-        [ContentSerializerIgnore]
-        public override float Layer {
-            get {return MapLayer/8f;} // TODO
-            set {base.Layer = value;}
-        }
-
         /// A hidden tile will not be drawn but still
         /// updated by its containing map
         [ContentSerializerIgnore]

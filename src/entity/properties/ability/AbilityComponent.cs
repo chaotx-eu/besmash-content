@@ -11,32 +11,26 @@ namespace BesmashContent {
     /// abilities with different behaviours
     [DataContract(IsReference = true)]
     public class AbilityComponent : ICloneable {
-        /// Path to the animation object file
-        /// this component shows on execution
+        /// Animation asset
         [DataMember]
-        [ContentSerializer(ElementName = "Animation", Optional = true)]
-        public string AnimationFile {get; set;}
+        [ContentSerializer(Optional = true)]
+        public GameAsset<SpriteAnimation> AnimationAsset {get; set;}
 
-        /// Path to the projectile object file
-        /// this component shoots on execution
+        /// Projectile asset
         [DataMember]
-        [ContentSerializer(ElementName = "Projectile", Optional = true)]
-        public string ProjectileFile {get; set;}
+        [ContentSerializer(Optional = true)]
+        public GameAsset<Projectile> ProjectileAsset {get; set;}
+
+        /// Ability effect asset
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public GameAsset<AbilityEffect> EffectAsset {get; set;}
 
         /// The position relative to the parent component
         /// or in case there is none to the ability user
         [DataMember]
         [ContentSerializer(Optional = true)]
         public Point Position {get; set;}
-
-        // TODO change Position => selected position for execution
-        /// List of positions relative to the parent component
-        /// or in case there is none to the ability user this
-        /// component may be executed on
-        /// not sure if i like it :?
-        // [DataMember]
-        // [ContentSerializer(Optional = true)]
-        // public List<Point> Positions {get; set;}
 
         /// The time in millisecond this component is
         /// executed after its parent has shown exactly or
@@ -79,12 +73,6 @@ namespace BesmashContent {
         [ContentSerializer(Optional = true)]
         public bool StickyRotation {get; set;}
 
-        /// An effect which is attached to creatures on
-        /// the same tile as this component on execution
-        [DataMember]
-        [ContentSerializer(Optional = true)]
-        public AbilityEffect Effect {get; set;}
-
         /// A list of child ability components which will
         /// be executed alongside this one
         [DataMember]
@@ -92,16 +80,28 @@ namespace BesmashContent {
         public List<AbilityComponent> Children {get; set;}
 
         /// A projectile which will be fired from this components
-        /// towards the ability users facing (TODO) on execution
-        [DataMember]
+        /// towards the ability users facing on execution
         [ContentSerializerIgnore]
-        public Projectile Projectile {get; protected set;}
+        public Projectile Projectile {
+            get {return ProjectileAsset != null
+                ? ProjectileAsset.Object : null;}
+        }
 
         /// An animtaion which is shown at the position
         /// of this component on execution
-        [DataMember]
         [ContentSerializerIgnore]
-        public SpriteAnimation Animation {get; protected set;}
+        public SpriteAnimation Animation {
+            get {return AnimationAsset != null
+                ? AnimationAsset.Object : null;}
+        }
+
+        /// An effect which is attached to creatures on
+        /// the same tile as this component on execution
+        [ContentSerializerIgnore]
+        public AbilityEffect Effect {
+            get {return EffectAsset != null
+                ? EffectAsset.Object : null;}
+        }
 
         /// Reference to the ability this component belongs to
         [ContentSerializerIgnore]
@@ -147,11 +147,14 @@ namespace BesmashContent {
         /// Loads any required ressources for this components
         /// animation and projectile as well as for its children
         public void load(ContentManager content) {
-            if(AnimationFile != null && Animation == null)
-                Animation = content.Load<SpriteAnimation>(AnimationFile);
+            if(AnimationAsset != null)
+                AnimationAsset.load(content);
 
-            if(ProjectileFile != null && Projectile == null)
-                Projectile = content.Load<Projectile>(ProjectileFile);
+            if(ProjectileAsset != null)
+                ProjectileAsset.load(content);
+
+            if(EffectAsset != null)
+                EffectAsset.load(content);
 
             if(Animation != null) Animation.load(content);
             if(Projectile != null) Projectile.load(content);
@@ -269,8 +272,14 @@ namespace BesmashContent {
             AbilityComponent copy = MemberwiseClone() as AbilityComponent;
             List<AbilityComponent> children = new List<AbilityComponent>();
 
-            if(Animation != null) copy.Animation = Animation.clone() as SpriteAnimation;
-            if(Projectile != null) copy.Projectile = Projectile.clone() as Projectile;
+            if(AnimationAsset != null) copy.AnimationAsset =
+                AnimationAsset.clone() as GameAsset<SpriteAnimation>;
+
+            if(ProjectileAsset != null) copy.ProjectileAsset =
+                ProjectileAsset.clone() as GameAsset<Projectile>;
+
+            if(EffectAsset != null) copy.EffectAsset =
+                EffectAsset.clone() as GameAsset<AbilityEffect>;
 
             AbilityComponent child;
             Children.ForEach(orig => {
@@ -295,19 +304,21 @@ namespace BesmashContent {
 
         /// Updates the position of the animation
         private void updateAnimationPosition() {
-            animation.Position = Ability.User.Position + (
-                Parent != null ? MapUtils.rotatePoint(
-                    Parent.Position + Position,
-                    Ability.User.Facing)
-                : MapUtils.rotatePoint(Position, Ability.User.Facing)
-            ).ToVector2();
+            Point pos = MapUtils.rotatePoint(Position, Ability.User.Facing);
+            AbilityComponent parent = Parent;
+            while(parent != null) {
+                pos += MapUtils.rotatePoint(parent.Position, Ability.User.Facing);
+                parent = parent.Parent;
+            }
+
+            animation.Position = Ability.User.Position + pos.ToVector2();
         }
 
         /// Updates the rotation of the animation
         private void updateAnimationRotation() {
             if(Animation.RotateRelative) {
                 int faceDiff = (int)animation.Facing - (int)Ability.User.Facing;
-                animation.Rotation = ((4 - faceDiff)%4)*90;
+                animation.Rotation = (Animation.Rotation + ((4 - faceDiff)%4)*90)%360;
             }
         }
     }

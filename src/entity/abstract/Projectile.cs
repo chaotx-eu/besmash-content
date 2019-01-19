@@ -1,22 +1,34 @@
 namespace BesmashContent {
     using System;
+    using System.Runtime.Serialization;
     using Microsoft.Xna.Framework;
     using Microsoft.Xna.Framework.Content;
 
+    [DataContract(IsReference = true)]
     public class Projectile : Movable {
-        /// Ability which is executed on collision
-        /// relative to the position of the projectile
-        [ContentSerializer(Optional = true)]
-        public Ability HitAbility {get; set;}
-
         /// Max tiles this projectile may travel
         /// before it will be removed from the map
+        [DataMember]
         [ContentSerializer(Optional = true)]
         public int MaxDistance {get; set;} = 32;
 
+        /// Ability asset
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public GameAsset<Ability> AbilityAsset {get; set;}
+
         /// Reference to the source of this projectile
+        [DataMember]
         [ContentSerializerIgnore]
         public Creature User {get; set;}
+
+        /// Ability which is executed on collision
+        /// relative to the position of the projectile
+        [ContentSerializerIgnore]
+        public Ability Ability {
+            get {return AbilityAsset != null
+                ? AbilityAsset.Object : null;}
+        }
 
         /// Handler for when a projectile starts moving on a map
         public event EventHandler ProjectileStartedEvent;
@@ -27,7 +39,7 @@ namespace BesmashContent {
         private int distanceTraveled;
         private bool collided;
 
-        public Projectile() : this("") {}
+        public Projectile() : this(null) {}
         public Projectile(string spriteSheet) : base(spriteSheet) {
             initHandler();
         }
@@ -36,9 +48,8 @@ namespace BesmashContent {
         /// projectile and its hit ability
         public override void load(ContentManager content) {
             base.load(content);
-
-            if(HitAbility != null)
-                HitAbility.load(content);
+            if(AbilityAsset != null) AbilityAsset.load(content);
+            if(Ability != null) Ability.load(content);
         }
 
         /// Starts moving this projectile towards its
@@ -82,11 +93,11 @@ namespace BesmashContent {
             base.update(gameTime);
 
             if(collided) {
-                if(HitAbility == null || !HitAbility.IsExecuting) {
+                if(Ability == null || !Ability.IsExecuting) {
                     ContainingMap.removeEntity(this);
                     onProjectileRemoved();
-                } else if(HitAbility != null)
-                    HitAbility.update(gameTime);
+                } else if(Ability != null)
+                    Ability.update(gameTime);
             }
         }
 
@@ -94,9 +105,9 @@ namespace BesmashContent {
         public new object clone() {
             Projectile projectile = base.clone() as Projectile;
 
-            if(HitAbility != null) {
-                projectile.HitAbility = HitAbility.clone() as Ability;
-                projectile.HitAbility.User = projectile;
+            if(Ability != null) {
+                projectile.AbilityAsset = AbilityAsset.clone() as GameAsset<Ability>;
+                projectile.Ability.User = projectile;
             }
 
             projectile.initHandler();
@@ -117,8 +128,8 @@ namespace BesmashContent {
         /// another map object considered solid
         protected virtual void onCollision(MapObject target) {
             if(ContainingMap != null) {
-                if(HitAbility != null)
-                    HitAbility.execute();
+                if(Ability != null)
+                    Ability.execute();
 
                 Color = Color.Transparent; // hide projectile
                 collided = true;

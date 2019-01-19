@@ -8,7 +8,7 @@ namespace BesmashContent {
     /// A class defines how the stats of a
     /// creature should grow when it levels up
     [DataContract(IsReference = true)]
-    public class Class {
+    public class Class : ICloneable {
         /// The title of the class
         [DataMember]
         public string Title {get; set;}
@@ -114,6 +114,10 @@ namespace BesmashContent {
                 Creature.Stats.add(1, statTypes[rng.Next(statTypes.Count)]);
 
             initialized = true;
+        }
+
+        public object clone() {
+            return MemberwiseClone();
         }
     }
 }

@@ -15,11 +15,8 @@ namespace BesmashContent {
         /// Animation which is shown on victim position
         /// when this effect is applied
         [DataMember]
-        [ContentSerializer(ElementName = "Animation", Optional = true)]
-        public string AnimationFile {get; set;}
-
-        [DataMember]
-        private SpriteAnimation animation;
+        [ContentSerializer(Optional = true)]
+        public GameAsset<SpriteAnimation> AnimationAsset {get; set;}
 
         /// Base damage that is applied to the creature
         /// this effect is attached to
@@ -137,6 +134,13 @@ namespace BesmashContent {
         [ContentSerializer(Optional = true)]
         public Point TurnsToLast {get; set;}
 
+        /// Varianz in percent which is applied to
+        /// the final damage and/or heal calculation
+        /// default: 10
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public int Varianz {get; set;} = 10;
+
         /// The current turn this effect is in. The
         /// counter gets incremented any time after
         /// this effect has been applied
@@ -170,12 +174,19 @@ namespace BesmashContent {
         [ContentSerializerIgnore]
         private int MaxTurns {get; set;}
 
-        public void load(ContentManager content) {
-            if(AnimationFile != null)
-                animation = content.Load<SpriteAnimation>(AnimationFile);
+        /// The animation shown whenever this effect is applied
+        [ContentSerializerIgnore]
+        public SpriteAnimation Animation {
+            get {return AnimationAsset != null
+                ? AnimationAsset.Object : null;}
+        }
 
-            if(animation != null)
-                animation.load(content);
+        public void load(ContentManager content) {
+            if(AnimationAsset != null)
+                AnimationAsset.load(content);
+
+            if(Animation != null)
+                Animation.load(content);
         }
 
         /// Creates a new Effect with default properties
@@ -219,9 +230,9 @@ namespace BesmashContent {
             else if(BaseHealTarget == PropertyTarget.AP)
                 Victim.AP += calculateBaseHeal();
 
-            if(animation != null && Victim.ContainingMap != null) {
-                animation.Position = Victim.Position;
-                Victim.ContainingMap.addAnimation(animation);
+            if(Animation != null && Victim.ContainingMap != null) {
+                Animation.Position = Victim.Position;
+                Victim.ContainingMap.addAnimation(Animation);
             }
 
             BaseDamage = (int)(BaseDamage*BaseDamageGrow);
@@ -233,7 +244,10 @@ namespace BesmashContent {
         /// Creates a clone of this effect
         public object clone() {
             AbilityEffect copy = MemberwiseClone() as AbilityEffect;
-            copy.animation = animation == null ? null : animation.clone() as SpriteAnimation;
+
+            if(AnimationAsset != null) copy.AnimationAsset =
+                AnimationAsset.clone() as GameAsset<SpriteAnimation>;
+
             return copy;
         }
 
@@ -247,29 +261,40 @@ namespace BesmashContent {
                 return baseDamage;
 
             // relevant stat (physival -> ATK, magical -> INT)
-            StatType relevantStat = BaseDamageType == DamageType.Magical
+            StatType damageStat = BaseDamageType == DamageType.Magical
                 ? StatType.Int : StatType.Atk;
 
             // chance for critical hit
             int critChance = 10 + (int)(100*((User.Stats.AGI
-                + Math.Max(0, (User.Stats.AGI - User.Stats.get(relevantStat))))
+                + Math.Max(0, (User.Stats.AGI - User.Stats.get(damageStat))))
                 / (2f*Stats.DeterminedMax)));
 
             // the total amount of damage taking user stats
             // and elements into account (TODO better function)
-            int stat = User.Stats.get(relevantStat);
+            int stat = User.Stats.get(damageStat);
+            bool crit = User.RNG.Next(100) < critChance;
             float mod = Stats.GrowRate*stat/(float)Stats.DeterminedMax;
             int totalDamage = (int)(baseDamage*(1 + mod*(1 + mod))
-                *(User.RNG.Next(100) < critChance ? 1.5f : 1)
-                *elementMult(BaseDamageElement, Victim.Element) + 0.5f);
+                *elementMult(BaseDamageElement, Victim.Element)
+                *(crit ? 1.5f : 1) + 0.5f);
 
-            relevantStat = relevantStat == StatType.Int
-                ? StatType.Wis : StatType.Def;
+            // apply varianz to damage
+            totalDamage = (int)(totalDamage
+                *((1f - Varianz/100f) + User.RNG.Next(0, Varianz+1)/50f));
 
             // final recalculation of damage taking
             // victims defensive stats into account
-            int finalDamage = (int)(totalDamage*(1 - (3*Victim.Stats.get(relevantStat))/(4f*Stats.DeterminedMax)));
-            return finalDamage;
+            StatType defenseStat = damageStat == StatType.Int
+                ? StatType.Wis : StatType.Def;
+
+            totalDamage = (int)(totalDamage
+                *(User.Stats.get(damageStat)/(float)Victim.Stats.get(defenseStat)));
+
+            // fire event on victim
+            if(totalDamage != 0) Victim.onDamaged(new DamageEventArgs(
+                BaseDamageTarget, BaseDamageType, BaseDamageElement, totalDamage, crit));
+
+            return totalDamage;
         }
 
         /// Calculates the base heal

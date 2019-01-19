@@ -89,9 +89,9 @@ namespace BesmashContent {
         /// Initializes a default collision resolver where solid
         /// tiles and entities are unpassable. Behaviour has to be
         /// reimplemented if a different CollisionResolver is used.
-        public Movable() : this("") {}
+        public Movable() : this(null) {}
         public Movable(string spriteSheet) {
-            SpriteSheet = spriteSheet;
+            // if(SpriteSheet == null && spriteSheet != null) SpriteSheet = spriteSheet;
             SpriteRectangle = new Rectangle(0, 0, DEFAULT_SPRITE_W, DEFAULT_SPRITE_H);
             SpriteCount = DEFAULT_SPRITE_C;
             SpritesPerStep = DEFAULT_SPS;

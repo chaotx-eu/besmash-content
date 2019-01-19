@@ -157,7 +157,10 @@ namespace BesmashContent {
         /// Event handler which is triggered when a creature dies
         public event EventHandler DeathEvent;
 
-        public Creature() : this("") {}
+        /// Is triggered whenever this creature receives damage
+        public event DamageEventHandler DamageEvent;
+
+        public Creature() : this(null) {}
         public Creature(string spriteSheet) : base(spriteSheet) {
             Abilities = new List<Ability>();
             Effects = new List<AbilityEffect>();
@@ -253,10 +256,16 @@ namespace BesmashContent {
             if(handler != null) handler(this, args);
         }
 
+        public void onDamaged(DamageEventArgs args) {
+            DamageEventHandler handler = DamageEvent;
+            if(handler != null) handler(this, args);
+        }
+
         public new object clone() {
             Creature copy = base.clone() as Creature;
-            copy.RNG = new Random();
             copy.Stats = Stats.clone() as Stats;
+            copy.Class = Class.clone() as Class;
+            copy.RNG = new Random();
             copy.Effects = new List<AbilityEffect>();
             copy.Abilities = new List<Ability>();
             Abilities.ForEach(a => copy.addAbility(a.clone() as Ability));

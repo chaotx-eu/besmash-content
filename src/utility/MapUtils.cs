@@ -85,5 +85,31 @@ namespace BesmashContent.Utility {
 
             return result;
         }
+
+        /// The maximum layer for both layer dimensions
+        public static int MaxLayer {get;} = 128;
+        private static Dictionary<Type, int> LayerMap {get;}
+
+        /// Initializes default layer levels
+        static MapUtils() {
+            // default layers [0 - MaxLayer]
+            LayerMap = new Dictionary<Type, int>();
+            LayerMap.Add(typeof(Tile), 1);
+            LayerMap.Add(typeof(Entity), 2);
+            LayerMap.Add(typeof(Creature), 3);
+            LayerMap.Add(typeof(Player), 3);
+            LayerMap.Add(typeof(Enemy), 3);
+            LayerMap.Add(typeof(Projectile), 4);
+            LayerMap.Add(typeof(Cursor), 5);
+            LayerMap.Add(typeof(SpriteAnimation), 6);
+        }
+
+        /// Returns the default layer level for the passed game
+        /// object dependent of its subtype. If no layer is defined
+        /// for that type 0 will be returned
+        public static int getLayer(Type type) {
+            return !LayerMap.ContainsKey(type) ? 0
+                : LayerMap[type];
+        }
     }
 }
