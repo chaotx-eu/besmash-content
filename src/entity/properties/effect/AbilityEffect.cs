@@ -134,6 +134,13 @@ namespace BesmashContent {
         [ContentSerializer(Optional = true)]
         public Point TurnsToLast {get; set;}
 
+        /// The amount of turns to wait before
+        /// this affect starts applieing itself
+        /// to the attached creature
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public int TurnOffset {get; set;}
+
         /// Varianz in percent which is applied to
         /// the final damage and/or heal calculation
         /// default: 10
@@ -196,6 +203,8 @@ namespace BesmashContent {
             RecalculatePercentDamage = false;
             RecalculateBaseHeal = true;
             RecalculatePercentHeal = false;
+            BaseDamageGrow = 1;
+            BaseHealGrow = 1;
             StatsMod = new StatsMod();
         }
 
@@ -216,6 +225,11 @@ namespace BesmashContent {
         /// according to the set properties
         public void apply() {
             if(Victim == null) return;
+
+            if(TurnOffset > 0) {
+                --TurnOffset;
+                return;
+            }
 
             if(++CurrentTurn > MaxTurns)
                 Victim.Effects.Remove(this);
@@ -284,15 +298,20 @@ namespace BesmashContent {
 
             // final recalculation of damage taking
             // victims defensive stats into account
-            StatType defenseStat = damageStat == StatType.Int
-                ? StatType.Wis : StatType.Def;
+            if(totalDamage != 0) {
+                StatType defenseStat = damageStat == StatType.Int
+                    ? StatType.Wis : StatType.Def;
 
-            totalDamage = (int)(totalDamage
-                *(User.Stats.get(damageStat)/(float)Victim.Stats.get(defenseStat)));
+                int dif = User.Stats.get(damageStat) - Victim.Stats.get(defenseStat);
+                float f = dif > 0 ? 1f + 7f*dif/Stats.DeterminedMax
+                    : dif < 0 ? 1f + dif/(float)Stats.DeterminedMax : 1;
 
-            // fire event on victim
-            if(totalDamage != 0) Victim.onDamaged(new DamageEventArgs(
-                BaseDamageTarget, BaseDamageType, BaseDamageElement, totalDamage, crit));
+                totalDamage = (int)(totalDamage*f); // TODO test formular
+
+                // fire event on victim
+                if(totalDamage != 0) Victim.onDamaged(new DamageEventArgs(
+                    BaseDamageTarget, BaseDamageType, BaseDamageElement, totalDamage, crit));
+            }
 
             return totalDamage;
         }

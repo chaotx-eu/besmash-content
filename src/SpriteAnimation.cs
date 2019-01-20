@@ -16,15 +16,15 @@ namespace BesmashContent {
         [ContentSerializer(Optional = true)]
         public Point SpriteSize {get; set;}
 
-        /// How many sprites are shown per second
-        [DataMember]
-        [ContentSerializer(Optional = true)]
-        public int SpritesPerSecond {get; set;}
-
         /// Row index in the sprite sheet
         [DataMember]
         [ContentSerializer(Optional = true)]
         public int SpriteRow {get; set;}
+
+        /// How many sprites are shown per second
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public int SpritesPerSecond {get; set;}
 
         /// How often this animation should be repeated.
         /// Values below 0 are interpreted as infinite
@@ -65,7 +65,7 @@ namespace BesmashContent {
         /// Starts the animation if contained by a map
         public void start() {
             if(ContainingMap != null) {
-                SpriteRectangle = new Rectangle(0, SpriteRow*SpriteSize.Y, SpriteSize.X, SpriteSize.Y);
+                SpriteRectangle = new Rectangle(0, Math.Max(0, SpriteRow-1)*SpriteSize.Y, SpriteSize.X, SpriteSize.Y);
                 CurrentFrame = column = timer = 0;
                 IsRunning = true;
                 onAnimationStarted();

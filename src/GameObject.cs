@@ -56,15 +56,6 @@ namespace BesmashContent {
         [ContentSerializer(Optional = true)]
         public int MapLayer {get; set;}
 
-        /// True layer this object is drawn to
-        [DataMember]
-        [ContentSerializerIgnore]
-        public float Layer {get {
-            return LayerLevel/
-            (10f*MapUtils.MaxLayer)
-                + MapLayer/(100f*MapUtils.MaxLayer);
-        }}
-
         /// Rectangle to draw to on the screen.
         [DataMember]
         [ContentSerializerIgnore]
@@ -74,6 +65,14 @@ namespace BesmashContent {
         [DataMember]
         [ContentSerializerIgnore]
         public Color Color {get; set;} = Color.White;
+
+        /// True layer this object is drawn to
+        [ContentSerializerIgnore]
+        public float Layer {get {
+            return LayerLevel/
+            (10f*MapUtils.MaxLayer)
+                + MapLayer/(100f*MapUtils.MaxLayer);
+        }}
 
         /// Reference to SpriteSheet image
         [ContentSerializerIgnore]

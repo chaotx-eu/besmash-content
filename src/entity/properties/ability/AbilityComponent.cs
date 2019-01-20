@@ -75,9 +75,15 @@ namespace BesmashContent {
 
         /// A list of child ability components which will
         /// be executed alongside this one
-        [DataMember]
         [ContentSerializer(CollectionItemName = "Component", Optional = true)]
-        public List<AbilityComponent> Children {get; set;}
+        public List<AbilityComponent> Children {
+            get {return children != null ? children
+                : (children = new List<AbilityComponent>());}
+            set {children = value;}
+        }
+
+        [DataMember]
+        private List<AbilityComponent> children;
 
         /// A projectile which will be fired from this components
         /// towards the ability users facing on execution

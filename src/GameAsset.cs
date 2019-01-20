@@ -1,8 +1,11 @@
 namespace BesmashContent {
     using Microsoft.Xna.Framework.Content;
     using System.Runtime.Serialization;
+    using System.Collections.Generic;
+    using System.Collections;
     using System.Reflection;
     using System.Linq;
+    using System;
 
     /// Represents an object which contains a loadable resource
     [DataContract(IsReference = true)]
@@ -36,16 +39,42 @@ namespace BesmashContent {
                             objVal = pi.GetValue(Object);
 
                             if(pi.CanWrite) {
-                                if(objVal != null && !objVal.Equals(defVal))
+                                // TODO test copy list
+                                // if(preVal is IList || objVal is IList) {
+                                //     List<object> list = new List<object>();
+
+                                //     if(preVal != null) foreach(var val in (preVal as IList))
+                                //         list.Add(val);
+                                //     if(objVal != null) foreach(var val in (objVal as IList))
+                                //         list.Add(val);
+                                        
+                                //     pi.SetValue(def, list); // TODO fix crash => cannot cast List<object>
+                                // } // else if
+
+                                // TODO alternative solution (logic is flawed, list is not copied)
+                                if(preVal is IList || objVal is IList) {
+                                    IList list = objVal as IList;
+
+                                    if(preVal != null) foreach(var val in (preVal as IList))
+                                        list.Add(val);
+                                }
+                                
+                                if(objVal != null && !objVal.Equals(defVal)) {
                                     pi.SetValue(def, objVal);
-                                else if(preVal != null && !preVal.Equals(defVal))
+                                } else if(preVal != null && !preVal.Equals(defVal)) {
                                     pi.SetValue(def, preVal);
+                                }
                             }
                         });
 
                     Object = def; // new instance
                 } else Object = preset;
             }
+        }
+
+        public static IList createList(Type myType) {
+            Type genericListType = typeof(List<>).MakeGenericType(myType);
+            return (IList)Activator.CreateInstance(genericListType);
         }
 
         public object clone() {

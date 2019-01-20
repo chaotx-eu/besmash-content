@@ -76,7 +76,7 @@ namespace BesmashContent {
         /// Creates a new class with default properties
         public Class() {
             Title = "Entity";
-            BaseStatPoints = new Point(30, 60);
+            BaseStatPoints = new Point(50, 60);
             VitWeight = new Point(2, 4);
             AtkWeight = new Point(1, 3);
             IntWeight = new Point(1, 3);
