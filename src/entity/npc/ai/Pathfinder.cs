@@ -40,10 +40,10 @@ namespace BesmashContent {
         [DataMember]
         public bool IsAtWork {get; protected set;}
 
-        /// Reference to the npc this pathfinder
-        /// belongs to
+        /// Reference to the map object this
+        /// pathfinder belongs to
         [DataMember]
-        public Npc Owner {get; protected set;}
+        public MapObject Owner {get; protected set;}
 
         /// An ordered list of points representing
         /// the single steps required from origin
@@ -81,7 +81,7 @@ namespace BesmashContent {
         [DataMember] private int i;
 
         public Pathfinder() {}
-        public Pathfinder(Npc owner) {
+        public Pathfinder(MapObject owner) {
             Owner = owner;
         }
 
@@ -101,6 +101,7 @@ namespace BesmashContent {
             openList.Add(new Node(Owner.Position.ToPoint()));
             closedList = new Dictionary<Point, Node>();
             Path = new List<Point>();
+            i = 0;
         }
 
         /// Updates this pathfinder and validates

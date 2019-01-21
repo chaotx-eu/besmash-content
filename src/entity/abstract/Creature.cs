@@ -76,6 +76,20 @@ namespace BesmashContent {
         [ContentSerializer(Optional = true)]
         public int BirthExp {get; set;} = 100;
 
+        /// The base ap cost this creature requires
+        /// to move the distance of one tile in battle
+        /// default: 15
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public int MoveAP {get; set;} = 15;
+
+        /// The amount of ap this creature gets at the
+        /// begining of its turn in a battle
+        // default: 10
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public int APGain {get; set;} = 10;
+
         /// List of ability files this creature
         /// receives when loaded
         [ContentSerializer(ElementName = "DefaultAbilities", CollectionItemName ="Path", Optional = true)]

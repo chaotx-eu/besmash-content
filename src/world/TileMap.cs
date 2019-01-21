@@ -512,10 +512,18 @@
                 e.Position.Y == y).ToList();
         }
 
-        /// Shows and enables the cursor
         private Movable slaveBuffer;
+
+        /// Shows the cursor at the battle map position
+        /// and sets it as the slave of this map
         public void showCursor() {
-            Cursor.Position = BattleMap.Position; // TODO (show at TeamLeader/last position)
+            showCursor(BattleMap.Position);
+        }
+
+        /// Shows the cursor at the passed position
+        /// and sets it as the slave of this map
+        public void showCursor(Vector2 pos) {
+            Cursor.Position = pos; // TODO (show at TeamLeader/last position)
             Cursor.stop();
             slaveBuffer = Slave;
             Slave = Cursor;

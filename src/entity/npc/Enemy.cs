@@ -38,43 +38,99 @@ namespace BesmashContent {
         }
 
         private bool newPath;
+        private int maxSteps = 3;
+        private int step = -1;
+
         /// Moves towards the closest player in sight
         /// within the battle map (i.e. the maps viewport)
         /// (In case several are in the same range the
         /// one with the lowest health is targeted) TODO
-        public Point? nextMove() {
-            if(AP < 10) return Point.Zero; // TODO move cost
-            if(Pathfinder.IsAtWork) return null;
+        public Point? nextMove() {return nextMove(false);}
+        public Point? nextMove(bool newPath) {
+            if(AP < MoveAP) return Point.Zero;
 
             if(newPath) {
-                newPath = false;
-                if(Pathfinder.Path.Count > 0) {
-                    Point step = Pathfinder.Path[0];
-                    Pathfinder.Path.Clear();
-                    return step;
-                } else return Point.Zero;
-            } else newPath = true;
-            
-            Pathfinder.Validator vl = pos => {
-                bool playerAdjacent = false;
-                Point p = new Point(0, -1);
-                for(int s = 0; s < 4; ++s) {
-                    if(ContainingMap.getEntities(pos + MapUtils.rotatePoint(p, (Facing)s))
-                    .Where(e => e is Player).Count() > 0) {
-                        playerAdjacent = true;
-                        break;
+                step = 0;
+                Pathfinder.Path.Clear();
+                
+                Pathfinder.Validator vl = pos => {
+                    bool playerAdjacent = false;
+                    Point p = new Point(0, -1);
+                    for(int s = 0; s < 4; ++s) {
+                        if(ContainingMap.getEntities(pos + MapUtils.rotatePoint(p, (Facing)s))
+                        .Where(e => e is Player).Count() > 0) {
+                            playerAdjacent = true;
+                            break;
+                        }
                     }
-                }
 
-                return playerAdjacent && ContainingMap
-                    .getTiles(pos).Where(t => t.Solid)
-                    .Count() == 0;
-            };
+                    return playerAdjacent && ContainingMap
+                        .getTiles(pos).Where(t => t.Solid)
+                        .Count() == 0;
+                };
 
-            Point tl = ContainingMap.BattleMap.Position.ToPoint() - ContainingMap.Viewport;
-            Point br = ContainingMap.BattleMap.Position.ToPoint() + ContainingMap.Viewport;
-            Pathfinder.getShortestPath(tl, br, vl);
+                Point tl = ContainingMap.BattleMap.Position.ToPoint() - ContainingMap.Viewport;
+                Point br = ContainingMap.BattleMap.Position.ToPoint() + ContainingMap.Viewport;
+                Pathfinder.getShortestPath(tl, br, vl);
+                return null;
+            }
+
+            if(!Pathfinder.IsAtWork){
+                if(step < Pathfinder.Path.Count)
+                    return Pathfinder.Path[step++];
+                else return null;
+            }
+
             return null;
+
+            // if(step >= 0) {
+            //     if(step < maxSteps && step < Pathfinder.Path.Count) {
+            //         int s = step++;
+            //         if(step >= maxSteps || step >= Pathfinder.Path.Count)
+            //             step = -1;
+
+            //         return Pathfinder.Path[s];
+            //     } else {
+            //         step = -1;
+            //         return null;
+            //         // return Point.Zero;
+            //     }
+            // } else {
+            //     step = 0;
+            //     Pathfinder.Path.Clear();
+            // }
+
+            // if(newPath) {
+            //     newPath = false;
+            //     // if(Pathfinder.Path.Count > 0) {
+            //         // Point step = Pathfinder.Path[0];
+            //         // Pathfinder.Path.Clear();
+            //         // return step;
+            //     if(step < maxSteps && step < Pathfinder.Path.Count) {
+            //         return Pathfinder.Path[step++];
+            //     } else return Point.Zero;
+            // } else newPath = true;
+            
+            // Pathfinder.Validator vl = pos => {
+            //     bool playerAdjacent = false;
+            //     Point p = new Point(0, -1);
+            //     for(int s = 0; s < 4; ++s) {
+            //         if(ContainingMap.getEntities(pos + MapUtils.rotatePoint(p, (Facing)s))
+            //         .Where(e => e is Player).Count() > 0) {
+            //             playerAdjacent = true;
+            //             break;
+            //         }
+            //     }
+
+            //     return playerAdjacent && ContainingMap
+            //         .getTiles(pos).Where(t => t.Solid)
+            //         .Count() == 0;
+            // };
+
+            // Point tl = ContainingMap.BattleMap.Position.ToPoint() - ContainingMap.Viewport;
+            // Point br = ContainingMap.BattleMap.Position.ToPoint() + ContainingMap.Viewport;
+            // Pathfinder.getShortestPath(tl, br, vl);
+            // return null;
         }
 
         /// Checks if there is an affordable ability
