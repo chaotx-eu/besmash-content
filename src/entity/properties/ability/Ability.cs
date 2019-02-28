@@ -16,6 +16,11 @@ namespace BesmashContent {
         [ContentSerializer(Optional = true)]
         public string Title {get; set;}
 
+        /// Description of this ability
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public string Description {get; set;}
+
         /// The ap required to execute this ability
         [DataMember]
         [ContentSerializer(Optional = true)]

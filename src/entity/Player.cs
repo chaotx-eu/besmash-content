@@ -9,17 +9,6 @@ namespace BesmashContent {
         public Player(string spriteSheet, string name) : base(spriteSheet) {
             Name = name;
             SpritesPerSecond = 4;
-
-            // no collision with other players
-            CollisionResolver = ((x, y, mos) => {
-                foreach(MapObject mo in mos) {
-                    if(mo is Tile && ((Tile)mo).Solid
-                    || mo is Creature && !(mo is Player))
-                        return Point.Zero;
-                }
-
-                return null;
-            });
         }
 
         // TODO (this is just for fun)

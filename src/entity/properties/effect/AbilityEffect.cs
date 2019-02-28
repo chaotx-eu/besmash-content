@@ -135,7 +135,7 @@ namespace BesmashContent {
         public Point TurnsToLast {get; set;}
 
         /// The amount of turns to wait before
-        /// this affect starts applieing itself
+        /// this affect starts applying itself
         /// to the attached creature
         [DataMember]
         [ContentSerializer(Optional = true)]
@@ -244,6 +244,25 @@ namespace BesmashContent {
             else if(BaseHealTarget == PropertyTarget.AP)
                 Victim.AP += calculateBaseHeal();
 
+            // TODO recalculate percent- damage and heal has no effect atm
+            if(PercentDamageTarget == PercentTarget.MaxHP)
+                Victim.HP -= (int)(Victim.MaxHP*(PercentDamage/100f));
+            else if(PercentDamageTarget == PercentTarget.MaxAP)
+                Victim.AP -= (int)(Victim.MaxAP*(PercentDamage/100f));
+            else if(PercentDamageTarget == PercentTarget.CurrentHP)
+                Victim.HP -= (int)(Victim.HP*(PercentDamage/100f));
+            else if(PercentDamageTarget == PercentTarget.CurrentAP)
+                Victim.AP -= (int)(Victim.AP*(PercentDamage/100f));
+
+            if(PercentHealTarget == PercentTarget.MaxHP)
+                Victim.HP += (int)(Victim.MaxHP*(PercentHeal/100f));
+            else if(PercentHealTarget == PercentTarget.MaxAP)
+                Victim.AP += (int)(Victim.MaxAP*(PercentHeal/100f));
+            else if(PercentHealTarget == PercentTarget.CurrentHP)
+                Victim.HP += (int)(Victim.HP*(PercentHeal/100f));
+            else if(PercentHealTarget == PercentTarget.CurrentAP)
+                Victim.AP += (int)(Victim.AP*(PercentHeal/100f));
+
             if(Animation != null && Victim.ContainingMap != null) {
                 Animation.Position = Victim.Position;
                 Victim.ContainingMap.addAnimation(Animation);
@@ -251,8 +270,6 @@ namespace BesmashContent {
 
             BaseDamage = (int)(BaseDamage*BaseDamageGrow);
             BaseHeal = (int)(BaseHeal*BaseHealGrow);
-
-            // TODO PercentDamage and PercentHeal
         }
 
         /// Creates a clone of this effect
@@ -328,7 +345,7 @@ namespace BesmashContent {
             return 0;
         }
 
-        /// Calculates the percentage heal
+        /// Calculates the percentage heal (deprecated?)
         protected virtual int calculatePercentHeal() {
             // TODO
             return 0;

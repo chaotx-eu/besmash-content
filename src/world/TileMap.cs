@@ -33,11 +33,13 @@
         [ContentSerializer(Optional = true)]
         public string Title {get; set;} = "";
 
-        /// Path to the file used for the played
-        /// BackgroundMusic while the map is loaded
-        [DataMember]
-        [ContentSerializer(Optional = true)]
-        public string BackgroundMusicFile {get; set;} // TODO
+        /// Path to the file used for the roaming theme song
+        [ContentSerializer(ElementName = "RoamingTheme", Optional = true)]
+        public string RoamingThemeFile {get; set;}
+
+        /// Path to the file used for the battle theme song
+        [ContentSerializer(ElementName = "BattleTheme", Optional = true)]
+        public string BattleThemeFile {get; set;}
 
         /// Describes Viewports width and height
         /// in Tiles. The Viewport position is
@@ -147,10 +149,16 @@
         /// the screen.
         [ContentSerializerIgnore]
         public int Y {get {return y;}}
-        
-        /// Reference to the background song object
+
+        /// Song that is looped while this map is
+        /// in roaming state
         [ContentSerializerIgnore]
-        public Song BackgroundMusic {get; set;} // TODO
+        public Song RoamingThemeSong {get; set;}
+
+        /// Song that is looped while this map is
+        /// in fighting state
+        [ContentSerializerIgnore]
+        public Song BattleThemeSong {get; set;}
 
         /// Wether this map has already been initialized
         [ContentSerializerIgnore]
@@ -276,6 +284,7 @@
                 }
 
                 if(e is Npc) (e as Npc).SpawnPosition = point.Position;
+                getTile(point.Position).Occupied = true;
                 e.Position = point.Position.ToVector2();
                 e.AP = e.MaxAP;
                 addEntity(e);
@@ -362,18 +371,20 @@
             foreach(Tile tile in Tiles) tile.load(Content);
             foreach(Entity entity in Entities) entity.load(Content);
 
-            // testing: background music (TODO)
-            // if(BackgroundMusicFile != null) try {
-            //     BackgroundMusic = Content.Load<Song>(BackgroundMusicFile);
-            //     // MediaPlayer.Play(BackgroundMusic);
-            // }
+            if(RoamingThemeFile != null)
+                RoamingThemeSong = Content.Load<Song>(RoamingThemeFile);
+
+            if(BattleThemeFile != null)
+                BattleThemeSong = Content.Load<Song>(BattleThemeFile);
 
             Cursor.load(Content);
+            setThemeSong(RoamingThemeSong); // TODO not the best place to start the song
         }
 
         /// Unloads and disposes all resources this
         /// map and any entities on it require
         public void unload() {
+            MediaPlayer.Stop(); // TODO fade volume away
             if(Content != null) {
                 Content.Dispose(); // also calls Unload
                 Content = null; // let garbage collection do the rest
@@ -408,6 +419,58 @@
             && BattleMap.Position == slavePlayer.Position) {
                 Slave = slavePlayer;
                 removeEntity(BattleMap);
+            }
+
+            updateThemeSong(gameTime);
+        }
+
+        private bool songFadingIn;
+        private bool songFadingOut;
+        private Song activeThemeSong;
+        private int MillisPerVolume = 1500;
+
+        public void setThemeSong(Song themeSong) {
+            setThemeSong(themeSong, true);
+        }
+
+        public void setThemeSong(Song themeSong, bool repeat) {
+            if(themeSong != activeThemeSong) {
+                MediaPlayer.IsRepeating = repeat;
+                if(activeThemeSong == null) {
+                    MediaPlayer.Volume = 0;
+                    MediaPlayer.Play(themeSong);
+                    songFadingIn = true;
+                    songFadingOut = false;
+                } else {
+                    songFadingIn = false;
+                    songFadingOut = true;
+                }
+
+                activeThemeSong = themeSong;
+            }
+        }
+
+        private void updateThemeSong(GameTime gameTime) {
+            float fragment = gameTime.ElapsedGameTime.Milliseconds/(float)MillisPerVolume;
+
+            if(songFadingOut) {
+                MediaPlayer.Pause();
+                MediaPlayer.Volume = Math.Max(0, MediaPlayer.Volume-fragment);
+                MediaPlayer.Resume();
+                if(MediaPlayer.Volume <= 0) {
+                    songFadingOut = false;
+                    if(activeThemeSong != null) {
+                        MediaPlayer.Play(activeThemeSong);
+                        songFadingIn = true;
+                    }
+                }
+            }
+            
+            if(songFadingIn) {
+                MediaPlayer.Pause();
+                MediaPlayer.Volume = Math.Min(1, MediaPlayer.Volume+fragment);
+                MediaPlayer.Resume();
+                if(MediaPlayer.Volume >= 1) songFadingIn = false;
             }
         }
 
@@ -544,11 +607,20 @@
                 && e.Position.X >= Slave.Position.X - Viewport.X
                 && e.Position.X <= Slave.Position.X + Viewport.X
                 && e.Position.Y >= Slave.Position.Y - Viewport.Y
-                && e.Position.Y <= Slave.Position.Y + Viewport.Y).Cast<Creature>());
+                && e.Position.Y <= Slave.Position.Y + Viewport.Y
+                && e.canSee(Slave.Position.ToPoint())).Cast<Creature>());
                 
             BattleMap.Participants.ForEach(e => center += e.Position.ToPoint());
             center /= new Point(BattleMap.Participants.Count, BattleMap.Participants.Count);
             setFightingState(center);
+        }
+
+        // TODO test
+        public void alignBattleMap() {
+            Point center = Point.Zero;
+            BattleMap.Participants.ForEach(e => center += e.Position.ToPoint());
+            center /= new Point(BattleMap.Participants.Count, BattleMap.Participants.Count);
+            BattleMap.moveTo(center);
         }
 
         private Movable slavePlayer; // backup slave player
@@ -561,6 +633,7 @@
                 Slave = null;
                 addEntity(BattleMap); // TODO sloppy solution (?)
                 BattleMap.moveTo(center);
+                setThemeSong(BattleThemeSong);
             }
         }
 
@@ -569,6 +642,7 @@
                 hideCursor();
                 State = MapState.Roaming;
                 BattleMap.moveTo(slavePlayer.Position.ToPoint());
+                setThemeSong(RoamingThemeSong);
             }
         }
     }

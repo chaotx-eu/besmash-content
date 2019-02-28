@@ -1,6 +1,7 @@
 namespace BesmashContent {
     using Microsoft.Xna.Framework;
     using Microsoft.Xna.Framework.Content;
+    using Microsoft.Xna.Framework.Audio;
     using System.Collections.Generic;
     using System.Runtime.Serialization;
     using System.Linq;
@@ -25,6 +26,17 @@ namespace BesmashContent {
         [DataMember]
         [ContentSerializer(Optional = true)]
         public GameAsset<AbilityEffect> EffectAsset {get; set;}
+
+        /// Dictionary of SpriteAnimations with creature names as keys
+        /// shown instead of the user sprite at execution of this component
+        [DataMember]
+        [ContentSerializer(CollectionItemName = "UserAnimation", Optional = true)]
+        public Dictionary<string, GameAsset<SpriteAnimation>> UserAnimations {get; set;}
+
+        /// Path to the sound effect file used by this component
+        [DataMember]
+        [ContentSerializer(ElementName = "ExecutionSound", Optional = true)]
+        public string ExecutionSoundFile {get; set;}
 
         /// The position relative to the parent component
         /// or in case there is none to the ability user
@@ -60,19 +72,6 @@ namespace BesmashContent {
         [DataMember]
         private int frameOffset;
 
-        /// Wether this components animation should stick
-        /// to its ability users position (default true)
-        [DataMember]
-        [ContentSerializer(Optional = true)]
-        public bool StickyPosition {get; set;}
-
-        /// Wether this components animation should stick
-        /// to its ability users rotation, has no effect
-        /// if RotateRelative is set to false (default true)
-        [DataMember]
-        [ContentSerializer(Optional = true)]
-        public bool StickyRotation {get; set;}
-
         /// A list of child ability components which will
         /// be executed alongside this one
         [ContentSerializer(CollectionItemName = "Component", Optional = true)]
@@ -85,7 +84,13 @@ namespace BesmashContent {
         [DataMember]
         private List<AbilityComponent> children;
 
-        /// A projectile which will be fired from this components
+        /// Animation of the ability user shown at execution
+        /// of this component
+        [DataMember]
+        [ContentSerializerIgnore]
+        public SpriteAnimation UserAnimation {get; protected set;}
+
+        /// A projectile which will be fired from this component
         /// towards the ability users facing on execution
         [ContentSerializerIgnore]
         public Projectile Projectile {
@@ -108,6 +113,11 @@ namespace BesmashContent {
             get {return EffectAsset != null
                 ? EffectAsset.Object : null;}
         }
+
+        /// The sound effect which is played on
+        /// execution of this component
+        [ContentSerializerIgnore]
+        public SoundEffect ExecutionSound {get; set;}
 
         /// Reference to the ability this component belongs to
         [ContentSerializerIgnore]
@@ -145,9 +155,8 @@ namespace BesmashContent {
         /// Creates a new ability component object
         /// values with default 
         public AbilityComponent() {
+            UserAnimations = new Dictionary<string, GameAsset<SpriteAnimation>>();
             Children = new List<AbilityComponent>();
-            StickyPosition = true;
-            StickyRotation = true;
         }
 
         /// Loads any required ressources for this components
@@ -162,9 +171,21 @@ namespace BesmashContent {
             if(EffectAsset != null)
                 EffectAsset.load(content);
 
+            if(ExecutionSoundFile != null)
+                ExecutionSound = content.Load<SoundEffect>(ExecutionSoundFile);
+
             if(Animation != null) Animation.load(content);
+            if(UserAnimation != null) UserAnimation.load(content); // TODO check why this load is necessary when loading a save game
             if(Projectile != null) Projectile.load(content);
             if(Effect != null) Effect.load(content);
+
+            Creature user;
+            if((user = Ability.User as Creature) != null) {
+                if(UserAnimations.ContainsKey(user.Name)) {
+                    UserAnimations[user.Name].load(content);
+                    UserAnimation = UserAnimations[user.Name].Object as SpriteAnimation;
+                }
+            }
 
             Children.ForEach(child => {
                 child.Parent = this;
@@ -207,26 +228,19 @@ namespace BesmashContent {
                 else activeList.RemoveAt(i);
             }
 
-            if(Animation != null) {
+            if(Animation != null)
                 framer = animation.CurrentFrame;
-
-                if(animation.IsRunning) {
-                    if(StickyPosition)
-                        updateAnimationPosition();
-
-                    if(StickyRotation)
-                        updateAnimationRotation();
-                }
-            }
 
             if(waitList.Count == 0 && activeList.Count == 0
             && (Animation == null || !animation.IsRunning)
-            && (Projectile == null || projectile.ContainingMap == null))
+            && (Projectile == null || projectile.ContainingMap == null)) {
                 IsExecuting = false;
+                // TODO stop user animation ?
+            }
         }
 
-        /// Executes this ability and adds all
-        /// children to the wait list
+        /// Executes this ability component
+        /// and its chidlren
         public void execute() {
             activeList = new List<AbilityComponent>();
             waitList = new List<AbilityComponent>(Children);
@@ -235,9 +249,9 @@ namespace BesmashContent {
 
             if(Animation != null) {
                 animation = Animation.clone() as SpriteAnimation;
-                updateAnimationPosition();
-                updateAnimationRotation();
                 animation.ContainingMap = Ability.User.ContainingMap;
+                animation.Origin = Ability.User;
+                animation.Offset = Position + (Parent != null ? Parent.Position : Point.Zero);
                 animationReady = true;
             }
 
@@ -250,10 +264,10 @@ namespace BesmashContent {
                     //     Ability.User as Creature, c));
                     // TODO crashes for user type == Projectile (hotfix below)
                     .ToList().ForEach(c => {
-                        MapObject user = Ability.User is Projectile
+                        MapObject usr = Ability.User is Projectile
                             ? ((Projectile)Ability.User).User : Ability.User;
 
-                        Effect.attach(user as Creature, c);
+                        Effect.attach(usr as Creature, c);
                     });
             }
 
@@ -271,6 +285,13 @@ namespace BesmashContent {
                 projectile = Projectile.clone() as Projectile;
                 projectileReady = true;
             }
+
+            Creature user = Ability.User as Creature;
+            if(UserAnimation != null && user != null)
+                user.ActiveAnimation = UserAnimation;
+
+            if(ExecutionSound != null)
+                ExecutionSound.Play();
         }
 
         /// Creates and returns a deep clone of this component
@@ -306,26 +327,6 @@ namespace BesmashContent {
 
             return Parent.getPosition() +
                 MapUtils.rotatePoint(Position, Ability.User.Facing);
-        }
-
-        /// Updates the position of the animation
-        private void updateAnimationPosition() {
-            Point pos = MapUtils.rotatePoint(Position, Ability.User.Facing);
-            AbilityComponent parent = Parent;
-            while(parent != null) {
-                pos += MapUtils.rotatePoint(parent.Position, Ability.User.Facing);
-                parent = parent.Parent;
-            }
-
-            animation.Position = Ability.User.Position + pos.ToVector2();
-        }
-
-        /// Updates the rotation of the animation
-        private void updateAnimationRotation() {
-            if(Animation.RotateRelative) {
-                int faceDiff = (int)animation.Facing - (int)Ability.User.Facing;
-                animation.Rotation = (Animation.Rotation + ((4 - faceDiff)%4)*90)%360;
-            }
         }
     }
 }

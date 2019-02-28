@@ -49,6 +49,11 @@ namespace BesmashContent.Utility {
         }
 
         /// Creates a line of points using the Bresenham-Algorithm
+        public static List<Point> getRay(Point p1, Point p2) {
+            return getRay(p1.X, p1.Y, p2.X, p2.Y);
+        }
+
+        /// Creates a line of points using the Bresenham-Algorithm
         /// https://www.codeproject.com/Articles/15604/Ray-casting-in-a-2D-tile-based-environment
         public static List<Point> getRay(int x1, int y1, int x2, int y2) {
             List<Point> result = new List<Point>();

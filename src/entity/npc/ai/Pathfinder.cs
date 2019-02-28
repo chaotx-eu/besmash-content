@@ -4,6 +4,8 @@ namespace BesmashContent {
     using System.Collections.Generic;
     using System.Runtime.Serialization;
     using System.Linq;
+    using Collections;
+    using Utility;
 
     /// Utility class for which implements search
     /// algorithms to provide paths to specific
@@ -56,8 +58,13 @@ namespace BesmashContent {
 
         /// List of positions that still have
         /// to be validated
+        // [DataMember]
+        // private List<Node> openList;
+
+        /// List of positions that still have
+        /// to be validated
         [DataMember]
-        private List<Node> openList;
+        private PriorityQueue<int, Node> openList;
 
         /// Collection of positions that have been
         /// validated
@@ -79,6 +86,8 @@ namespace BesmashContent {
 
         /// Current index within the open list
         [DataMember] private int i;
+        [DataMember] private Node pathProbe;
+
 
         public Pathfinder() {}
         public Pathfinder(MapObject owner) {
@@ -92,66 +101,155 @@ namespace BesmashContent {
         /// validator and returns an ordered list of points
         /// representing the single steps required
         public void getShortestPath(Point tl, Point br, Validator vl) {
+            // this.tl = tl;
+            // this.br = br;
+            // validator = vl;
+            // IsAtWork = true;
+            // targets = new List<Point>();
+            // openList = new List<Node>();
+            // openList.Add(new Node(Owner.Position.ToPoint()));
+            // closedList = new Dictionary<Point, Node>();
+            // Path = new List<Point>();
+            // i = 0;
+
             this.tl = tl;
             this.br = br;
-            validator = vl;
-            IsAtWork = true;
             targets = new List<Point>();
-            openList = new List<Node>();
-            openList.Add(new Node(Owner.Position.ToPoint()));
+            for(int x, y = tl.Y; y <= br.Y; ++y)
+            for(x = tl.X; x <= br.X; ++x) {
+                Point pos = new Point(x, y);
+                if(vl(pos)) targets.Add(pos);
+            }
+
+            openList = new PriorityQueue<int, Node>();
+            openList.enqueue(0, new Node(Owner.Position.ToPoint()));
             closedList = new Dictionary<Point, Node>();
             Path = new List<Point>();
-            i = 0;
+            IsAtWork = targets.Count > 0;
+            pathProbe = null;
         }
+
+        // /// Updates this pathfinder and validates
+        // /// the next positions from the openList
+        // public void update() {
+        //     if(!IsAtWork) return;
+
+        //     Point pos;
+        //     Node probe, node, other;
+
+        //     if(openList.Count > 0) {
+        //         if(i >= 0) {
+        //             probe = openList[i];
+        //             openList.RemoveAt(i);
+        //             closedList[probe.Pos] = probe;
+        //             sides.ForEach(s => {
+        //                 other = null;
+        //                 pos = s + probe.Pos;
+        //                 node = new Node(pos, probe);
+        //                 closedList.TryGetValue(pos, out other);
+        //                 if(validator(pos) && !targets.Contains(pos))
+        //                     targets.Add(pos);
+
+        //                 if(pos.X >= tl.X && pos.X <= br.X
+        //                 && pos.Y >= tl.Y && pos.Y <= br.Y
+        //                 && (other == null || other.Len > node.Len)
+        //                 && !Owner.ContainingMap.getTiles(pos).Any(t => t.Solid)
+        //                 && openList.Where(o => o.Pos == pos && o.Len <= node.Len).Count() == 0
+        //                 && Owner.ContainingMap.getEntities(pos)
+        //                 .Where(e => e is Creature).Count() == 0)
+        //                     openList.Add(node);
+        //             });
+
+        //             --i;
+        //         } else i = openList.Count-1;
+        //     } else {
+        //         node = null;
+        //         IsAtWork = false;
+        //         targets.ForEach(tgt =>  {
+        //             if(node != null) return;
+        //             closedList.TryGetValue((Point)tgt, out node);
+        //         });
+
+        //         while(node != null) {
+        //             if(node.Pre != null) // skip first spot
+        //                 Path.Insert(0, node.Pos);
+
+        //             node = node.Pre;
+        //         }
+        //     }
+        // }
 
         /// Updates this pathfinder and validates
         /// the next positions from the openList
         public void update() {
             if(!IsAtWork) return;
 
+            if(pathProbe != null) {
+                if(pathProbe.Pre == null) {
+                    pathProbe = null;
+                    IsAtWork = false;
+                } else {
+                    path.Insert(0, pathProbe.Pos);
+                    pathProbe = pathProbe.Pre;
+                }
+
+                return;
+            }
+
             Point pos;
             Node probe, node, other;
 
             if(openList.Count > 0) {
-                if(i >= 0) {
-                    probe = openList[i];
-                    openList.RemoveAt(i);
+                probe = openList.dequeue();
+
+                if(targets.Contains(probe.Pos)) {
+                    pathProbe = probe;
+                    // IsAtWork = false;
+                    // while(probe != null) {
+                    //     if(probe.Pre != null) // skip first spot
+                    //         Path.Insert(0, probe.Pos);
+
+                    //     probe = probe.Pre;
+                    // }
+                } else {
                     closedList[probe.Pos] = probe;
                     sides.ForEach(s => {
-                        other = null;
                         pos = s + probe.Pos;
-                        node = new Node(pos, probe);
-                        closedList.TryGetValue(pos, out other);
-                        if(validator(pos) && !targets.Contains(pos))
-                            targets.Add(pos);
 
                         if(pos.X >= tl.X && pos.X <= br.X
                         && pos.Y >= tl.Y && pos.Y <= br.Y
-                        && (other == null || other.Len > node.Len)
                         && !Owner.ContainingMap.getTiles(pos).Any(t => t.Solid)
-                        && openList.Where(o => o.Pos == pos && o.Len <= node.Len).Count() == 0
                         && Owner.ContainingMap.getEntities(pos)
-                        .Where(e => e is Creature).Count() == 0)
-                            openList.Add(node);
+                        .Where(e => e is Creature).Count() == 0) {
+                            other = null;
+                            node = new Node(pos, probe);
+                            closedList.TryGetValue(pos, out other);
+
+                            if(other == null) {
+                                other = openList.Values.Find(n =>
+                                    n.Pos.Equals(pos));
+
+                                if(other != null && other.Len > node.Len)
+                                    openList.remove(nodeValue(other), other);
+
+                                if(other == null || other.Len > node.Len)
+                                    openList.enqueue(nodeValue(node), node);
+                            }
+                        }
                     });
-
-                    --i;
-                } else i = openList.Count-1;
-            } else {
-                node = null;
-                IsAtWork = false;
-                targets.ForEach(tgt =>  {
-                    if(node != null) return;
-                    closedList.TryGetValue((Point)tgt, out node);
-                });
-
-                while(node != null) {
-                    if(node.Pre != null) // skip first spot
-                        Path.Insert(0, node.Pos);
-
-                    node = node.Pre;
                 }
-            }
+            } else IsAtWork = false;
+        }
+
+        private int nodeValue(Node node) {
+            int h = 999999;
+            List<Point> ray;
+            targets.ForEach(pos => {
+                ray = MapUtils.getRay(node.Pos, pos);
+                if(ray.Count < h) h = ray.Count;
+            });
+
+            return node.Len + h;
         }
     }
 }

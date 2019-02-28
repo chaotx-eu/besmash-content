@@ -68,11 +68,6 @@ namespace BesmashContent {
         [ContentSerializerIgnore]
         public Creature Creature {get; set;}
 
-        /// Flag to keep track if the base
-        /// stat points have been distributed
-        [DataMember]
-        private bool initialized;
-
         /// Creates a new class with default properties
         public Class() {
             Title = "Entity";
@@ -109,11 +104,14 @@ namespace BesmashContent {
             for(i = 0; i < wisCount; ++i) statTypes.Add(StatType.Wis);
             for(i = 0; i < agiCount; ++i) statTypes.Add(StatType.Agi);
 
-            for(i = 0; i < Stats.LevelUpPoints + (initialized ? 0
-            : rng.Next(BaseStatPoints.X, BaseStatPoints.Y+1)); ++i)
-                Creature.Stats.add(1, statTypes[rng.Next(statTypes.Count)]);
+            int points = Stats.LevelUpPoints;
+            if(!Creature.IsBorn) {
+                points += rng.Next(BaseStatPoints.X, BaseStatPoints.Y+1);
+                Creature.setBorn();
+            }
 
-            initialized = true;
+            for(i = 0; i < points; ++i)
+                Creature.Stats.add(1, statTypes[rng.Next(statTypes.Count)]);
         }
 
         public object clone() {

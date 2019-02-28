@@ -3,8 +3,10 @@ namespace BesmashContent {
     using System.Runtime.Serialization;
     using Microsoft.Xna.Framework;
     using Microsoft.Xna.Framework.Content;
+    using Microsoft.Xna.Framework.Graphics;
+    using Utility;
 
-    [DataContract]
+    [DataContract(IsReference = true)]
     public class SpriteAnimation : MapObject, ICloneable {
         /// Total amount of sprites per row in this animation
         [DataMember]
@@ -32,12 +34,33 @@ namespace BesmashContent {
         [ContentSerializer(Optional = true)]
         public int MaxIterations {get; set;}
 
-        /// Indicates that this animations sprites should be
-        /// rotated relative to the facing of another map
-        /// object (e.g. the user of an ability)
+        /// Indicates wether the facing of the origin
+        /// should be added to the set sprite row
+        /// (North: 0, East: 1, South: 2, West: 3)
         [DataMember]
         [ContentSerializer(Optional = true)]
-        public bool RotateRelative {get; set;}
+        public bool RowRelativeToFacing {get; set;}
+
+        /// Indicates that this animations sprites should be
+        /// rotated relative to the facing of another its
+        /// origin (e.g. the user of an ability). It is adviced
+        /// not to set this to true alongside RowPerFacing
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public bool RotateRelativeToFacing {get; set;}
+
+        /// Wether this animation should stick to the position
+        /// of its origin if any is defined
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public bool StickyPosition {get; set;}
+
+        /// Animations may have an origin which is another
+        /// map object, which may be used to determine this
+        /// animations relative rotation and sprite row
+        [DataMember]
+        [ContentSerializerIgnore]
+        public MapObject Origin {get; set;}
 
         /// The current iteration of this animation
         [DataMember]
@@ -54,26 +77,42 @@ namespace BesmashContent {
         [ContentSerializerIgnore]
         public bool IsRunning {get; protected set;}
 
+        /// Position offset
+        [DataMember]
+        [ContentSerializerIgnore]
+        public Point Offset {get; set;} = Point.Zero;
+
         /// Event handler for when the animation has started
         public event AnimationStartedHandler AnimationStartedEvent;
 
         /// Event handler for when the animation has finished
         public event AnimationFinishedHandler AnimationFinishedEvent;
 
-        private int column, timer;
+        private int column, row, timer;
 
         /// Starts the animation if contained by a map
         public void start() {
             if(ContainingMap != null) {
-                SpriteRectangle = new Rectangle(0, Math.Max(0, SpriteRow-1)*SpriteSize.Y, SpriteSize.X, SpriteSize.Y);
                 CurrentFrame = column = timer = 0;
-                IsRunning = true;
+                spriteRotation = Rotation; // backup original rotation
+                IsRunning = true; // moved to draw (TODO)
                 onAnimationStarted();
+                updateSprite();
+                SpriteRectangle = new Rectangle(
+                    SpriteSize.X*column, SpriteSize.Y*row,
+                    SpriteSize.X, SpriteSize.Y
+                );
+
+                // TODO temp fix for non sticky animations
+                if(Origin != null) Position = Origin.Position + MapUtils
+                    .rotatePoint(Offset, Origin.Facing)
+                    .ToVector2();
             }
         }
 
         public override void update(GameTime gameTime) {
             if(!IsRunning) return;
+            updateSprite();
             base.update(gameTime);
 
             timer += gameTime.ElapsedGameTime.Milliseconds;
@@ -81,6 +120,14 @@ namespace BesmashContent {
                 nextFrame();
                 timer = 0;
             }
+        }
+
+        /// Stops this animation immediately
+        public void stop() {
+            ContainingMap.Animations.Remove(this);
+            ContainingMap = null;
+            IsRunning = false;
+            onAnimationFinished();
         }
 
         /// Sets the sprite rectangle to the next
@@ -92,18 +139,33 @@ namespace BesmashContent {
             ++CurrentFrame;
             if(++column >= SpriteCount) {
                 if(++Iterations > MaxIterations && MaxIterations >= 0) {
-                    ContainingMap.Animations.Remove(this);
-                    ContainingMap = null;
-                    IsRunning = false;
-                    onAnimationFinished();
+                    stop();
                     return;
                 } else column = 0;
             }
 
             SpriteRectangle = new Rectangle(
-                SpriteSize.X*column, Math.Max(0, SpriteRow-1)*SpriteSize.Y,
+                SpriteSize.X*column, SpriteSize.Y*row,
                 SpriteSize.X, SpriteSize.Y
             );
+        }
+
+        private float spriteRotation;
+        private void updateSprite() {
+            row = Math.Max(0, SpriteRow-1);
+            if(Origin != null) {
+                if(RowRelativeToFacing)
+                    row += (int)Origin.Facing;
+
+                if(RotateRelativeToFacing) {
+                    int faceDiff = (int)Facing - (int)Origin.Facing;
+                    Rotation = (spriteRotation + ((4 - faceDiff)%4)*90)%360;
+                }
+
+                if(StickyPosition) Position = Origin.Position + MapUtils
+                    .rotatePoint(Offset, Origin.Facing)
+                    .ToVector2();
+            }
         }
 
         protected virtual void onAnimationStarted() {

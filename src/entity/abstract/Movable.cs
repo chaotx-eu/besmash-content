@@ -247,7 +247,7 @@ namespace BesmashContent {
             MoveFinishedEvent = null;
             CollisionResolver = (x, y, mos) => {
                 foreach(MapObject mo in mos)
-                    if(mo is Creature || mo is Tile && ((Tile)mo).Solid)
+                    if(mo is Tile && ((((Tile)mo).Solid) || ((Tile)mo).Occupied))
                         return Point.Zero;
 
                 return null;

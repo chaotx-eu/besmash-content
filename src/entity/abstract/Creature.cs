@@ -1,6 +1,8 @@
 namespace BesmashContent {
     using Microsoft.Xna.Framework;
+    using Microsoft.Xna.Framework.Graphics;
     using Microsoft.Xna.Framework.Content;
+    using Microsoft.Xna.Framework.Audio;
     using System.Runtime.Serialization;
     using System.Collections.Generic;
     using System.Linq;
@@ -21,10 +23,10 @@ namespace BesmashContent {
         [DataMember]
         private string name;
 
-        /// The class of this creature
+        /// Class asset
         [DataMember]
-        [ContentSerializer(Optional = true)]
-        public Class Class {get; set;}
+        [ContentSerializer(ElementName = "Class", Optional = true)]
+        public GameAsset<Class> ClassAsset {get; set;}
 
         /// The stats of this creature
         [ContentSerializer(Optional = true)]
@@ -78,10 +80,10 @@ namespace BesmashContent {
 
         /// The base ap cost this creature requires
         /// to move the distance of one tile in battle
-        /// default: 15
+        /// default: 10
         [DataMember]
         [ContentSerializer(Optional = true)]
-        public int MoveAP {get; set;} = 15;
+        public int MoveAP {get; set;} = 10;
 
         /// The amount of ap this creature gets at the
         /// begining of its turn in a battle
@@ -89,6 +91,46 @@ namespace BesmashContent {
         [DataMember]
         [ContentSerializer(Optional = true)]
         public int APGain {get; set;} = 10;
+
+        /// Path to file used for death sound effect
+        [DataMember]
+        [ContentSerializer(ElementName = "DeathSound", Optional = true)]
+        public string DeathSoundFile {get; set;}
+
+        /// Path to file used for death attack effect
+        [DataMember]
+        [ContentSerializer(ElementName = "AttackSound", Optional = true)]
+        public string AttackSoundFile {get; set;}
+
+        /// Path to file used for damage sound effect
+        [DataMember]
+        [ContentSerializer(ElementName = "DamageSound", Optional = true)]
+        public string DamageSoundFile {get; set;}
+        
+        /// Path to file used for level up sound effect
+        [DataMember]
+        [ContentSerializer(ElementName = "LevelUpSound", Optional = true)]
+        public string LevelUpSoundFile {get; set;}
+
+        /// Asset used for death animation
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public GameAsset<SpriteAnimation> DeathAnimationAsset {get; set;}
+
+        /// Asset used for attack animation
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public GameAsset<SpriteAnimation> AttackAnimationAsset {get; set;}
+
+        /// Asset used for damage animation
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public GameAsset<SpriteAnimation> DamageAnimationAsset {get; set;}
+
+        /// Asset used for level up animation
+        [DataMember]
+        [ContentSerializer(Optional = true)]
+        public GameAsset<SpriteAnimation> LevelUpAnimationAsset {get; set;}
 
         /// List of ability files this creature
         /// receives when loaded
@@ -102,6 +144,17 @@ namespace BesmashContent {
 
         [DataMember]
         private List<string> abilityFiles;
+
+        /// The class of this creature
+        [DataMember]
+        [ContentSerializerIgnore]
+        public Class Class {
+            get {return ClassAsset != null
+                ? ClassAsset.Object : clazz;}
+            protected set {clazz = value;}
+        }
+
+        private Class clazz;
 
         /// The amount of gathered exp in this level
         [DataMember]
@@ -168,6 +221,85 @@ namespace BesmashContent {
         [ContentSerializerIgnore]
         public bool IsFighting {get; set;}
 
+        /// Sound effect that is played when this creature dies
+        [ContentSerializerIgnore]
+        public SoundEffect DeathSound {get; protected set;}
+
+        /// Sound effect that is played when this creature attacks
+        [ContentSerializerIgnore]
+        public SoundEffect AttackSound {get; protected set;}
+
+        /// Sound effect that is played when this creature takes damage
+        [ContentSerializerIgnore]
+        public SoundEffect DamageSound {get; protected set;}
+
+        /// Sound effect that is played when this creature levels up
+        [ContentSerializerIgnore]
+        public SoundEffect LevelUpSound {get; protected set;}
+
+        /// Animation that is shown instead of the current
+        /// sprite sheet when this creature dies
+        [ContentSerializerIgnore]
+        public SpriteAnimation DeathAnimation {
+            get {return DeathAnimationAsset != null
+                ? DeathAnimationAsset.Object : null;}
+        }
+
+        /// Animation that is shown instead of the current
+        /// sprite sheet when this creature attacks
+        [ContentSerializerIgnore]
+        public SpriteAnimation AttackAnimation {
+            get {
+                return AttackAnimationAsset != null
+                ? AttackAnimationAsset.Object : null;}
+        }
+
+        /// Animation that is shown instead of the current
+        /// sprite sheet when this creature takes damage
+        [ContentSerializerIgnore]
+        public SpriteAnimation DamageAnimation {
+            get {
+                return DamageAnimationAsset != null
+                ? DamageAnimationAsset.Object : null;}
+        }
+
+        /// Animation that is shown instead of the current
+        /// sprite sheet when this creature levels up
+        [ContentSerializerIgnore]
+        public SpriteAnimation LevelUpAnimation {
+            get {
+                return LevelUpAnimationAsset != null
+                ? LevelUpAnimationAsset.Object : null;}
+        }
+
+        /// Active animation which starts running immediately
+        /// when set. Resets back to null once finished
+        [ContentSerializerIgnore]
+        public SpriteAnimation ActiveAnimation {
+            get {return activeAnimation;}
+            set {
+                if(value == null) {
+                    if(activeAnimation != null
+                    && activeAnimation.IsRunning)
+                        activeAnimation.stop();
+
+                    activeAnimation = null;
+                } else {
+                    activeAnimation = value.clone() as SpriteAnimation;
+                    activeAnimation.Origin = this;
+                    ContainingMap.addAnimation(activeAnimation, true);
+                }
+            }
+        }
+
+        private SpriteAnimation activeAnimation;
+
+        /// Wether this creature is considered born i.e. it has
+        /// been spawned once and the base stat points of the
+        /// creatures class has been distributed
+        [ContentSerializerIgnore]
+        public bool IsBorn {get; protected set;}
+
         /// Event handler which is triggered when a creature dies
         public event EventHandler DeathEvent;
 
@@ -178,9 +310,19 @@ namespace BesmashContent {
         public Creature(string spriteSheet) : base(spriteSheet) {
             Abilities = new List<Ability>();
             Effects = new List<AbilityEffect>();
-            Class = new Class();
+            clazz = new Class();
             Stats = new Stats();
             initRNG();
+
+            // TODO reinit handler in deserialization
+            MoveStartedEvent += (sender, args) => {
+                if(ContainingMap == null) return;
+                if(ContainingMap.getEntities(args.Position)
+                .Where(e => e is Creature).Count() < 2)
+                    ContainingMap.getTile(args.Position).Occupied = false;
+
+                ContainingMap.getTile(args.Target).Occupied = true;
+            };
         }
 
         /// Loads required resources for this creature
@@ -193,6 +335,45 @@ namespace BesmashContent {
             });
 
             Abilities.ForEach(a => a.load(content));
+
+            if(DeathSoundFile != null)
+                DeathSound = content.Load<SoundEffect>(DeathSoundFile);
+
+            if(AttackSoundFile != null)
+                AttackSound = content.Load<SoundEffect>(AttackSoundFile);
+
+            if(DamageSoundFile != null)
+                DamageSound = content.Load<SoundEffect>(DamageSoundFile);
+
+            if(LevelUpSoundFile != null)
+                LevelUpSound = content.Load<SoundEffect>(LevelUpSoundFile);
+
+            if(DeathAnimationAsset != null) DeathAnimationAsset.load(content);
+            if(AttackAnimationAsset != null) AttackAnimationAsset.load(content);
+            if(DamageAnimationAsset != null) DamageAnimationAsset.load(content);
+            if(LevelUpAnimationAsset != null) LevelUpAnimationAsset.load(content);
+
+            if(DeathAnimation != null) {
+                DeathAnimation.load(content);
+                DeathAnimation.Origin = this;
+            }
+
+            if(AttackAnimation != null) {
+                AttackAnimation.load(content);
+                AttackAnimation.Origin = this;
+            }
+
+            if(DamageAnimation != null) {
+                DamageAnimation.load(content);
+                DamageAnimation.Origin = this;
+            }
+
+            if(LevelUpAnimation != null) {
+                LevelUpAnimation.load(content);
+                LevelUpAnimation.Origin = this;
+            }
+
+            if(ClassAsset != null) ClassAsset.load(content);
             if(Class != null) Class.Creature = this;
         }
 
@@ -243,8 +424,18 @@ namespace BesmashContent {
             Class.raiseStats();
             ++Level;
             HP = Math.Min(MaxHP, HP + (int)(MaxHP*healPercent));
-            // TODO fire levelUpEvent
+
+            if(LevelUpSound != null) LevelUpSound.Play();
+            ActiveAnimation = LevelUpAnimation;
+            // TODO fire levelUpEvent => onLevelUpd
             levelUp();
+        }
+
+        /// Marks this creature as born so the base
+        /// state points of this creatures class wont
+        /// be distributed when this creature levels up
+        public void setBorn() {
+            IsBorn = true;
         }
 
         /// Kills this creature in case its life is
@@ -253,7 +444,6 @@ namespace BesmashContent {
         /// from the map and any battle maps.
         public void die() {
             if(HP > 0) return;
-            // TODO death animation (may be a row in the spritesheet)
             onDeath(null);
             ContainingMap.BattleMap.Participants.Remove(this);
             ContainingMap.removeEntity(this);
@@ -268,21 +458,46 @@ namespace BesmashContent {
         protected void onDeath(EventArgs args) {
             EventHandler handler = DeathEvent;
             if(handler != null) handler(this, args);
+
+            if(DeathSound != null) DeathSound.Play();
+            ActiveAnimation = DeathAnimation;
         }
 
         public void onDamaged(DamageEventArgs args) {
             DamageEventHandler handler = DamageEvent;
             if(handler != null) handler(this, args);
+
+            if(DamageSound != null) DamageSound.Play();
+            ActiveAnimation = DamageAnimation;
+        }
+
+        public override void draw(SpriteBatch batch) {
+            if(ActiveAnimation == null || !ActiveAnimation.IsRunning)
+                base.draw(batch);
         }
 
         public new object clone() {
             Creature copy = base.clone() as Creature;
+            if(ClassAsset != null)
+                copy.ClassAsset = ClassAsset.clone() as GameAsset<Class>;
+
             copy.Stats = Stats.clone() as Stats;
-            copy.Class = Class.clone() as Class;
             copy.RNG = new Random();
             copy.Effects = new List<AbilityEffect>();
             copy.Abilities = new List<Ability>();
             Abilities.ForEach(a => copy.addAbility(a.clone() as Ability));
+
+            if(DeathAnimation != null) copy.DeathAnimationAsset =
+                DeathAnimationAsset.clone() as GameAsset<SpriteAnimation>;
+            
+            if(AttackAnimation != null) copy.AttackAnimationAsset =
+                AttackAnimationAsset.clone() as GameAsset<SpriteAnimation>;
+
+            if(DamageAnimation != null) copy.DamageAnimationAsset =
+                DamageAnimationAsset.clone() as GameAsset<SpriteAnimation>;
+
+            if(LevelUpAnimation != null) copy.LevelUpAnimationAsset =
+                LevelUpAnimationAsset.clone() as GameAsset<SpriteAnimation>;
 
             // TODO
             // copy.Weapon = Weapone.clone() as Weapon;
