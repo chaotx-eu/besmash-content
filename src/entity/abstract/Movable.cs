@@ -246,9 +246,11 @@ namespace BesmashContent {
             MoveStartedEvent = null;
             MoveFinishedEvent = null;
             CollisionResolver = (x, y, mos) => {
-                foreach(MapObject mo in mos)
-                    if(mo is Tile && ((((Tile)mo).Solid) || ((Tile)mo).Occupied))
+                foreach(MapObject mo in mos) {
+                    Tile tile = mo as Tile;
+                    if(tile != null && tile.Occupied)
                         return Point.Zero;
+                }
 
                 return null;
             };

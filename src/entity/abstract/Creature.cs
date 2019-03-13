@@ -314,7 +314,7 @@ namespace BesmashContent {
             Stats = new Stats();
             initRNG();
 
-            // TODO reinit handler in deserialization
+            // TODO reinit handler on deserialization
             MoveStartedEvent += (sender, args) => {
                 if(ContainingMap == null) return;
                 if(ContainingMap.getEntities(args.Position)
@@ -396,10 +396,20 @@ namespace BesmashContent {
         /// Updates this creature and any abilities
         /// that are currently executed
         public override void update(GameTime gameTime) {
-            base.update(gameTime);
             if(HP <= 0) die();
-            Abilities.Where(a => a.IsExecuting)
-                .ToList().ForEach(a => a.update(gameTime));
+            bool abilityRunning = false;
+
+            Abilities.Where(a => a.IsExecuting).ToList().ForEach(a => {
+                abilityRunning = true;
+                a.update(gameTime);
+            });
+
+            if(!dieing) base.update(gameTime);
+            else if(!abilityRunning && (ActiveAnimation == null
+            || !ActiveAnimation.IsRunning)) {
+                ContainingMap.BattleMap.Participants.Remove(this);
+                ContainingMap.removeEntity(this);
+            }
         }
 
         /// Applys any effects attached to this creature.
@@ -432,21 +442,21 @@ namespace BesmashContent {
         }
 
         /// Marks this creature as born so the base
-        /// state points of this creatures class wont
+        /// stat points of this creatures class wont
         /// be distributed when this creature levels up
         public void setBorn() {
             IsBorn = true;
         }
 
+        private bool dieing;
         /// Kills this creature in case its life is
         /// lower or equal to zero by running its
         /// death animation and then removing it
         /// from the map and any battle maps.
         public void die() {
-            if(HP > 0) return;
+            if(HP > 0 || dieing) return;
             onDeath(null);
-            ContainingMap.BattleMap.Participants.Remove(this);
-            ContainingMap.removeEntity(this);
+            dieing = true;
         }
 
         /// Initializes the random number generator

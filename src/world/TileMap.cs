@@ -284,7 +284,7 @@
                 }
 
                 if(e is Npc) (e as Npc).SpawnPosition = point.Position;
-                getTile(point.Position).Occupied = true;
+                // getTile(point.Position).Occupied = true;
                 e.Position = point.Position.ToVector2();
                 e.AP = e.MaxAP;
                 addEntity(e);

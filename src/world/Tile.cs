@@ -18,9 +18,14 @@ namespace BesmashContent {
         public bool Hidden {get; set;}
 
         /// Wether this tile is currently occupied
-        /// by any creature
+        /// by any creature (or if it is solid)
         [ContentSerializerIgnore]
-        public bool Occupied {get; set;}
+        public bool Occupied {
+            get {return occupied || Solid;}
+            set {occupied = value;}
+        }
+
+        private bool occupied;
 
         /// A disabled tile will neither be drawn or
         /// updated by its containinig map

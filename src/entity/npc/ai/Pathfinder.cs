@@ -218,9 +218,8 @@ namespace BesmashContent {
 
                         if(pos.X >= tl.X && pos.X <= br.X
                         && pos.Y >= tl.Y && pos.Y <= br.Y
-                        && !Owner.ContainingMap.getTiles(pos).Any(t => t.Solid)
-                        && Owner.ContainingMap.getEntities(pos)
-                        .Where(e => e is Creature).Count() == 0) {
+                        && !Owner.ContainingMap.getTile(pos).Occupied
+                        && !Owner.ContainingMap.getTiles(pos).Any(t => t.Solid)) {
                             other = null;
                             node = new Node(pos, probe);
                             closedList.TryGetValue(pos, out other);
